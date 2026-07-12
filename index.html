@@ -21,7 +21,7 @@
         <!-- 顶部 Header -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-xl shadow-xs border border-gray-100">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Moonlight Dynamics <span class="text-sm font-normal text-gray-500">v3.1 FE Web</span></h1>
+                <h1 class="text-2xl font-bold text-gray-900">Moonlight Dynamics <span class="text-sm font-normal text-gray-500">v3.2 FE Web</span></h1>
                 <p class="text-xs text-gray-500 mt-1">A psychological dynamics model exploring fantasy frequency.</p>
             </div>
             <div class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-mono text-gray-700">
@@ -46,51 +46,51 @@
             </div>
         </div>
 
-        <!-- 参数标定手册 -->
-        <div class="bg-gray-800 text-gray-300 p-4 rounded-xl shadow-xs text-xs space-y-1 font-sans leading-relaxed">
-            <div class="font-bold text-white text-sm mb-1">💡 参数标定锚点参考（清醒时间 = 16小时）：</div>
-            <p>• <b>时间吞噬度 α</b>：欧卡2(ETS2)跑长途 = 1.2 (极杀时间) ； 休闲小游戏 = 0.4</p>
-            <p>• <b>大脑占据度 β</b>：神力科莎(ACC)抠细节 / 杀戮尖塔算牌 = 1.2 (脑子占满) ； 挂机放置 = 0.2</p>
-            <p>• <b>即时爽快度 β_R</b>：赛博朋克2077黑客流秒怪 = 1.0 (多巴胺狂飙) ； 硬核受苦游戏 = -0.2</p>
-            <p>• <b>固有杀伤力 B</b>：普通前任 = 0.5 ； 极度意难平 = 2.5</p>
+        <!-- 标定手册与 K 值阈值说明 (双栏布局) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-gray-800 text-gray-300 p-4 rounded-xl shadow-xs text-xs space-y-1 font-sans leading-relaxed">
+                <div class="font-bold text-white text-sm mb-1">🎮 游戏参数标定参考（清醒时间 16h）：</div>
+                <p>• <b>时间吞噬度 α</b>：欧卡2(跑长途)=1.2 (极杀时间) ； 休闲游戏=0.4</p>
+                <p>• <b>大脑占据度 β</b>：神力科莎(抠细节) / 尖塔(算牌)=1.2 ； 挂机放置=0.2</p>
+                <p>• <b>即时爽快度 β_R</b>：赛博朋克2077(秒怪)=1.0 ； 硬核受苦=-0.2</p>
+                <p>• <b>固有杀伤力 B</b>：普通前任=0.5 ； 极度意难平=2.5</p>
+            </div>
+            <div class="bg-indigo-900 text-indigo-100 p-4 rounded-xl shadow-xs text-xs space-y-1 font-sans leading-relaxed">
+                <div class="font-bold text-white text-sm mb-1">📊 杀伤力 K 战损等级阈值：</div>
+                <p>• <span class="text-green-400 font-bold">K = 0</span>：<b>绝对防御 (No Pain)</b>，心无旁骛，免疫伤害。</p>
+                <p>• <span class="text-blue-300 font-bold">0 < K ≤ 0.3</span>：<b>轻微波动 (正常状态)</b>，偶尔闪念，不影响现实。</p>
+                <p>• <span class="text-orange-300 font-bold">0.3 < K ≤ 0.8</span>：<b>精神内耗 (危险边缘)</b>，注意力涣散，操作变形。</p>
+                <p>• <span class="text-red-400 font-bold">K > 0.8</span>：<b>彻底破防 (理智崩塌)</b>，情绪失控，被回忆吞噬。</p>
+            </div>
         </div>
 
         <!-- 滑块控制面板 -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-blue-50/50 p-5 rounded-xl border border-blue-100 space-y-4">
                 <h3 class="font-bold text-blue-900 border-b border-blue-200 pb-2 flex justify-between">
-                    <span>👤 自身现实条件</span>
-                    <span class="text-xs text-blue-600 font-normal">客观环境与心理基底</span>
+                    <span>👤 自身现实条件</span><span class="text-xs text-blue-600 font-normal">客观环境与心理基底</span>
                 </h3>
-                
                 <div class="space-y-1">
                     <div class="flex justify-between text-xs font-medium text-gray-700">
-                        <label>正事时间比例 (L)</label>
-                        <span id="val-L" class="font-mono bg-blue-100 px-1.5 rounded text-blue-800">60%</span>
+                        <label>正事时间比例 (L)</label><span id="val-L" class="font-mono bg-blue-100 px-1.5 rounded text-blue-800">60%</span>
                     </div>
                     <input type="range" id="slider-L" min="0" max="0.9" step="0.05" value="0.6" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                 </div>
-
                 <div class="space-y-1">
                     <div class="flex justify-between text-xs font-medium text-gray-700">
-                        <label>想她本能频率 (H0)</label>
-                        <span id="val-H0" class="font-mono bg-blue-100 px-1.5 rounded text-blue-800">0.50 级</span>
+                        <label>想她本能频率 (H0)</label><span id="val-H0" class="font-mono bg-blue-100 px-1.5 rounded text-blue-800">0.50 级</span>
                     </div>
                     <input type="range" id="slider-H0" min="0" max="1" step="0.05" value="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                 </div>
-
                 <div class="space-y-1">
                     <div class="flex justify-between text-xs font-medium text-gray-700">
-                        <label>你的理智基础 (C0)</label>
-                        <span id="val-C0" class="font-mono bg-blue-100 px-1.5 rounded text-blue-800">0.80 级</span>
+                        <label>你的理智基础 (C0)</label><span id="val-C0" class="font-mono bg-blue-100 px-1.5 rounded text-blue-800">0.80 级</span>
                     </div>
                     <input type="range" id="slider-C0" min="0.1" max="1" step="0.05" value="0.8" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                 </div>
-
                 <div class="space-y-1">
                     <div class="flex justify-between text-xs font-medium text-gray-700">
-                        <label>白月光固有杀伤力 (B)</label>
-                        <span id="val-B" class="font-mono bg-blue-100 px-1.5 rounded text-blue-800">1.20 级</span>
+                        <label>白月光固有杀伤力 (B)</label><span id="val-B" class="font-mono bg-blue-100 px-1.5 rounded text-blue-800">1.20 级</span>
                     </div>
                     <input type="range" id="slider-B" min="0.5" max="3" step="0.1" value="1.2" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                 </div>
@@ -98,38 +98,29 @@
 
             <div class="bg-red-50/50 p-5 rounded-xl border border-red-100 space-y-4 game-slider">
                 <h3 class="font-bold text-red-900 border-b border-red-200 pb-2 flex justify-between">
-                    <span>🎮 游戏属性配置</span>
-                    <span class="text-xs text-red-600 font-normal">外部干预项参数</span>
+                    <span>🎮 游戏属性配置</span><span class="text-xs text-red-600 font-normal">外部干预项参数</span>
                 </h3>
-
                 <div class="space-y-1">
                     <div class="flex justify-between text-xs font-medium text-gray-700">
-                        <label>时间吞噬度 (α)</label>
-                        <span id="val-alpha" class="font-mono bg-red-100 px-1.5 rounded text-red-800">0.80 级</span>
+                        <label>时间吞噬度 (α)</label><span id="val-alpha" class="font-mono bg-red-100 px-1.5 rounded text-red-800">0.80 级</span>
                     </div>
                     <input type="range" id="slider-alpha" min="0.1" max="1.5" step="0.1" value="0.8" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                 </div>
-
                 <div class="space-y-1">
                     <div class="flex justify-between text-xs font-medium text-gray-700">
-                        <label>大脑占据度 (β)</label>
-                        <span id="val-beta" class="font-mono bg-red-100 px-1.5 rounded text-red-800">0.70 级</span>
+                        <label>大脑占据度 (β)</label><span id="val-beta" class="font-mono bg-red-100 px-1.5 rounded text-red-800">0.70 级</span>
                     </div>
                     <input type="range" id="slider-beta" min="0.1" max="1.5" step="0.1" value="0.7" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                 </div>
-
                 <div class="space-y-1">
                     <div class="flex justify-between text-xs font-medium text-gray-700">
-                        <label>理智腐蚀度 (γ)</label>
-                        <span id="val-gamma" class="font-mono bg-red-100 px-1.5 rounded text-red-800">0.30 级</span>
+                        <label>理智腐蚀度 (γ)</label><span id="val-gamma" class="font-mono bg-red-100 px-1.5 rounded text-red-800">0.30 级</span>
                     </div>
                     <input type="range" id="slider-gamma" min="0" max="1" step="0.1" value="0.3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                 </div>
-
                 <div class="space-y-1">
                     <div class="flex justify-between text-xs font-medium text-gray-700">
-                        <label>即时爽快度 (β_R)</label>
-                        <span id="val-betaR" class="font-mono bg-red-100 px-1.5 rounded text-red-800">0.50 级</span>
+                        <label>即时爽快度 (β_R)</label><span id="val-betaR" class="font-mono bg-red-100 px-1.5 rounded text-red-800">0.50 级</span>
                     </div>
                     <input type="range" id="slider-betaR" min="-0.5" max="1.5" step="0.1" value="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                 </div>
@@ -181,6 +172,14 @@
             return { R_vals, F_total, K_vals, best_R: R_vals[minIdx], minK, L, max_R, baseK: K_vals[0] };
         }
 
+        // 判断战损等级标签
+        function getKLabel(k) {
+            if (k === 0) return "绝对防御";
+            if (k <= 0.3) return "轻微波动";
+            if (k <= 0.8) return "精神内耗";
+            return "彻底破防";
+        }
+
         function updateUI() {
             txtL.innerText = Math.round(elL.value * 100) + '%';
             txtH0.innerText = parseFloat(elH0.value).toFixed(2) + ' 级';
@@ -195,31 +194,34 @@
             const free_hours = (1.0 - data.L) * 16.0;
             const game_hours = data.best_R * 16.0;
 
-            // 核心逻辑升级：分离“绝对安全”和“越打越崩”的场景
+            const baseLabel = getKLabel(data.baseK);
+            const minLabel = getKLabel(data.minK);
+
+            // 完美的逻辑单调性与阈值闭环判定
             if (game_hours >= free_hours - 0.5 && free_hours > 0) {
-                diagBox.innerText = `🚨 现实逃避：每天剩 ${free_hours.toFixed(1)}h，全拿来打游戏麻痹自己。这不是防守，是逃避！已被破防！`;
+                diagBox.innerText = `🚨 现实逃避：每天剩 ${free_hours.toFixed(1)}h，全拿来打游戏麻痹自己。已被现实破防！【当前: ${minLabel} K=${data.minK.toFixed(2)}】`;
                 diagBox.className = "w-full text-center py-4 px-6 rounded-xl font-bold text-lg shadow-xs transition-all duration-300 bg-red-50 text-red-800 border border-red-200";
             } else if (game_hours <= 0.1) {
-                // 如果最好是不打游戏，那要看现在是不是安全的
+                // 如果最优解是不打游戏 (曲线单调递增 或 本来就为0)
                 if (data.baseK <= 0.3) {
-                    diagBox.innerText = `🛡️ 绝对防线：你目前的现实状态极其充实。无需任何游戏干预，她也完全无法破防！`;
+                    diagBox.innerText = `🛡️ 状态极佳：保持现在的充实感！无需游戏干预，她也无法破防。【当前: ${baseLabel} K=${data.baseK.toFixed(2)}】`;
                     diagBox.className = "w-full text-center py-4 px-6 rounded-xl font-bold text-lg shadow-xs transition-all duration-300 bg-green-50 text-green-800 border border-green-200";
                 } else {
-                    diagBox.innerText = `⚠️ 饮鸩止渴：这款游戏只会加速你的理智崩塌！最优解是【绝对禁游】去干正事。（基础战损已达 ${data.baseK.toFixed(1)}）`;
-                    diagBox.className = "w-full text-center py-4 px-6 rounded-xl font-bold text-lg shadow-xs transition-all duration-300 bg-orange-50 text-orange-800 border border-orange-200";
+                    diagBox.innerText = `⚠️ 绝对禁止！游戏只会加速理智崩塌！当前唯一解是【禁游去干正事】。【当前不玩已是: ${baseLabel} K=${data.baseK.toFixed(2)}】`;
+                    diagBox.className = "w-full text-center py-4 px-6 rounded-xl font-bold text-lg shadow-xs transition-all duration-300 bg-red-50 text-red-800 border border-red-200";
                 }
             } else if (data.minK < data.baseK) {
-                // 只要打游戏比不打强，就说明转移注意力有效
+                // 曲线存在下降空间，打游戏有用
                 if (data.minK === 0) {
-                    diagBox.innerText = `✅ 完美转移：干完正事，每天适度打 ${game_hours.toFixed(1)} 小时该游戏，刚好能把杀伤力归零。`;
+                    diagBox.innerText = `✅ 完美转移：干完正事后，每天打 ${game_hours.toFixed(1)}h 游戏，可将杀伤力降至 0。【达成: ${minLabel}】`;
                     diagBox.className = "w-full text-center py-4 px-6 rounded-xl font-bold text-lg shadow-xs transition-all duration-300 bg-blue-50 text-blue-800 border border-blue-200";
                 } else {
-                    diagBox.innerText = `💡 战损压制：物理隔离有效。每天打 ${game_hours.toFixed(1)} 小时游戏，能将杀伤力从 ${data.baseK.toFixed(1)} 强行压制到最低谷 ${data.minK.toFixed(1)}。`;
+                    diagBox.innerText = `💡 战损压制：每天打 ${game_hours.toFixed(1)}h 游戏，能将杀伤力从 ${data.baseK.toFixed(2)} 强行压制到 ${data.minK.toFixed(2)}。【改善至: ${minLabel}】`;
                     diagBox.className = "w-full text-center py-4 px-6 rounded-xl font-bold text-lg shadow-xs transition-all duration-300 bg-gray-100 text-gray-800 border border-gray-300";
                 }
             } else {
-                // 曲线一路向上的兜底判定
-                diagBox.innerText = `⚠️ 越玩越崩：游戏投入产出比极低，反而会削弱现实自控力。建议立刻停止游玩！`;
+                // 兜底异常
+                diagBox.innerText = `⚠️ 饮鸩止渴：越玩越崩！游戏产出比极低，请立即退出游戏！`;
                 diagBox.className = "w-full text-center py-4 px-6 rounded-xl font-bold text-lg shadow-xs transition-all duration-300 bg-orange-50 text-orange-800 border border-orange-200";
             }
 
@@ -234,7 +236,6 @@
             chartKill.update('none');
         }
 
-        // UX 升级：开启精确的 Hover 提示框配置
         const commonTooltipConfig = {
             callbacks: {
                 title: function(context) { return `打游戏: ${parseFloat(context[0].label).toFixed(1)} 小时`; },
