@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moonlight-Dynamics 月光吸引力动力学控制台</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };
@@ -13,49 +15,78 @@
     <style>
         input[type="range"] { accent-color: #3b82f6; }
         .game-slider input[type="range"] { accent-color: #ef4444; }
+        /* 酷炫的炫彩科技感渐变背景，用来衬托高斯模糊和流体玻璃的透光感 */
+        .glass-bg {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 40%, #dee2e6 100%);
+            position: relative;
+            overflow-x: hidden;
+        }
+        .glass-bg::before {
+            content: ""; position: fixed; top: -10%; left: -10%; width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(0,0,0,0) 70%);
+            z-index: 0; pointer-events: none;
+        }
+        .glass-bg::after {
+            content: ""; position: fixed; bottom: -10%; right: -10%; width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(239,68,68,0.1) 0%, rgba(0,0,0,0) 70%);
+            z-index: 0; pointer-events: none;
+        }
+        /* Liquid Glass 流体玻璃核心样式 */
+        .liquid-glass {
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(16px) saturate(120%);
+            -webkit-backdrop-filter: blur(16px) saturate(120%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+        }
+        .liquid-glass-dark {
+            background: rgba(31, 41, 55, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen p-4 md:p-8 font-sans text-gray-800">
+<body class="glass-bg min-h-screen p-4 md:p-8 font-sans text-gray-800">
 
-    <div class="max-w-7xl mx-auto space-y-6">
+    <div class="max-w-7xl mx-auto space-y-6 relative z-10">
         <!-- 顶部 Header -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-xl shadow-xs border border-gray-100">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 liquid-glass p-5 rounded-2xl">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Moonlight Dynamics <span class="text-sm font-normal text-gray-500">v3.2 FE Web</span></h1>
-                <p class="text-xs text-gray-500 mt-1">A psychological dynamics model exploring fantasy frequency.</p>
+                <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Moonlight Dynamics <span class="text-xs font-normal text-blue-600 bg-blue-100/60 px-2 py-0.5 rounded-full ml-1">v3.2 Glass FE</span></h1>
+                <p class="text-xs text-gray-500 mt-1">A psychological dynamics model exploring fantasy frequency and emotional stability.</p>
             </div>
-            <div class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-mono text-gray-700">
+            <div class="bg-white/60 px-3 py-2 rounded-xl text-xs font-mono text-gray-700 border border-white/50">
                 核心基准: $K = \frac{\max(F_{eff} \cdot B - E, 0) \cdot S^\alpha}{C}$
             </div>
         </div>
 
         <!-- AI 动态诊断结论框 -->
-        <div id="diagnostic-box" class="w-full text-center py-4 px-6 rounded-xl font-bold text-lg shadow-xs transition-all duration-300 bg-amber-50 text-amber-800 border border-amber-200">
+        <div id="diagnostic-box" class="w-full text-center py-4 px-6 rounded-2xl font-bold text-lg shadow-sm transition-all duration-300 liquid-glass border-amber-200/60 text-amber-900">
             正在初始化动力学控制台...
         </div>
 
         <!-- 图表展示区 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white p-4 rounded-xl shadow-xs border border-gray-100">
-                <h3 class="text-sm font-bold text-gray-700 mb-2 text-center">空闲状态下的幻想频率 (F_total)</h3>
+            <div class="liquid-glass p-5 rounded-2xl">
+                <h3 class="text-sm font-bold text-gray-700 mb-3 text-center tracking-wide">空闲状态下的幻想频率 (F_total)</h3>
                 <div class="h-64"><canvas id="chart-fantasy"></canvas></div>
             </div>
-            <div class="bg-white p-4 rounded-xl shadow-xs border border-gray-100">
-                <h3 class="text-sm font-bold text-gray-700 mb-2 text-center">白月光终极杀伤力 (K)</h3>
+            <div class="liquid-glass p-5 rounded-2xl">
+                <h3 class="text-sm font-bold text-gray-700 mb-3 text-center tracking-wide">白月光终极杀伤力 (K)</h3>
                 <div class="h-64"><canvas id="chart-kill"></canvas></div>
             </div>
         </div>
 
-        <!-- 标定手册与 K 值阈值说明 (双栏布局) -->
+        <!-- 标定手册与 K 值阈值说明 (流体夜空玻璃风格) -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-gray-800 text-gray-300 p-4 rounded-xl shadow-xs text-xs space-y-1 font-sans leading-relaxed">
-                <div class="font-bold text-white text-sm mb-1">🎮 游戏参数标定参考（清醒时间 16h）：</div>
+            <div class="liquid-glass-dark text-gray-300 p-5 rounded-2xl text-xs space-y-1.5 leading-relaxed shadow-lg">
+                <div class="font-bold text-white text-sm mb-1 flex items-center gap-1">🎮 游戏参数标定参考（清醒时间 16h）：</div>
                 <p>• <b>时间吞噬度 α</b>：欧卡2(跑长途)=1.2 (极杀时间) ； 休闲游戏=0.4</p>
-                <p>• <b>大脑占据度 β</b>：神力科莎(抠细节) / 尖塔(算牌)=1.2 ； 挂机放置=0.2</p>
+                <p>• <b>大脑占据度 β</b>：神力科莎(ACC)抠细节 / 尖塔(算牌)=1.2 ； 挂机放置=0.2</p>
                 <p>• <b>即时爽快度 β_R</b>：赛博朋克2077(秒怪)=1.0 ； 硬核受苦=-0.2</p>
-                <p>• <b>固有杀伤力 B</b>：普通前任=0.5 ； 极度意难平=2.5</p>
             </div>
-            <div class="bg-indigo-900 text-indigo-100 p-4 rounded-xl shadow-xs text-xs space-y-1 font-sans leading-relaxed">
+            <div class="bg-indigo-950/70 backdrop-blur-md border border-indigo-500/20 text-indigo-200 p-5 rounded-2xl text-xs space-y-1.5 leading-relaxed shadow-lg">
                 <div class="font-bold text-white text-sm mb-1">📊 杀伤力 K 战损等级阈值：</div>
                 <p>• <span class="text-green-400 font-bold">K = 0</span>：<b>绝对防御 (No Pain)</b>，心无旁骛，免疫伤害。</p>
                 <p>• <span class="text-blue-300 font-bold">0 < K ≤ 0.3</span>：<b>轻微波动 (正常状态)</b>，偶尔闪念，不影响现实。</p>
@@ -66,68 +97,126 @@
 
         <!-- 滑块控制面板 -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-blue-50/50 p-5 rounded-xl border border-blue-100 space-y-4">
-                <h3 class="font-bold text-blue-900 border-b border-blue-200 pb-2 flex justify-between">
-                    <span>👤 自身现实条件</span><span class="text-xs text-blue-600 font-normal">客观环境与心理基底</span>
+            <!-- 左侧：自身现实条件 -->
+            <div class="bg-blue-50/40 backdrop-blur-md border border-blue-200/40 p-5 rounded-2xl space-y-5 shadow-xs">
+                <h3 class="font-bold text-blue-900 border-b border-blue-200/50 pb-2 flex justify-between items-center">
+                    <span>👤 自身现实条件</span>
+                    <span class="text-xs text-blue-600 font-normal bg-blue-100/50 px-2 py-0.5 rounded-md">客观环境与心理基底</span>
                 </h3>
+                
                 <div class="space-y-1">
-                    <div class="flex justify-between text-xs font-medium text-gray-700">
-                        <label>正事时间比例 (L)</label><span id="val-L" class="font-mono bg-blue-100 px-1.5 rounded text-blue-800">60%</span>
+                    <div class="flex justify-between items-center text-xs font-medium text-gray-700">
+                        <div class="flex items-center gap-1">
+                            <button onclick="openModal('L')" class="text-blue-500 hover:text-blue-700 cursor-pointer text-sm">ℹ️</button>
+                            <label>正事时间比例 (L)</label>
+                        </div>
+                        <span id="val-L" class="font-mono bg-blue-100/70 px-1.5 rounded text-blue-800">60%</span>
                     </div>
-                    <input type="range" id="slider-L" min="0" max="0.9" step="0.05" value="0.6" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <input type="range" id="slider-L" min="0" max="0.9" step="0.05" value="0.6" class="w-full h-2 bg-gray-200/80 rounded-lg appearance-none cursor-pointer">
                 </div>
+
                 <div class="space-y-1">
-                    <div class="flex justify-between text-xs font-medium text-gray-700">
-                        <label>想她本能频率 (H0)</label><span id="val-H0" class="font-mono bg-blue-100 px-1.5 rounded text-blue-800">0.50 级</span>
+                    <div class="flex justify-between items-center text-xs font-medium text-gray-700">
+                        <div class="flex items-center gap-1">
+                            <button onclick="openModal('H0')" class="text-blue-500 hover:text-blue-700 cursor-pointer text-sm">ℹ️</button>
+                            <label>想她本能频率 (H0)</label>
+                        </div>
+                        <span id="val-H0" class="font-mono bg-blue-100/70 px-1.5 rounded text-blue-800">0.50 级</span>
                     </div>
-                    <input type="range" id="slider-H0" min="0" max="1" step="0.05" value="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <input type="range" id="slider-H0" min="0" max="1" step="0.05" value="0.5" class="w-full h-2 bg-gray-200/80 rounded-lg appearance-none cursor-pointer">
                 </div>
+
                 <div class="space-y-1">
-                    <div class="flex justify-between text-xs font-medium text-gray-700">
-                        <label>你的理智基础 (C0)</label><span id="val-C0" class="font-mono bg-blue-100 px-1.5 rounded text-blue-800">0.80 级</span>
+                    <div class="flex justify-between items-center text-xs font-medium text-gray-700">
+                        <div class="flex items-center gap-1">
+                            <button onclick="openModal('C0')" class="text-blue-500 hover:text-blue-700 cursor-pointer text-sm">ℹ️</button>
+                            <label>你的理智基础 (C0)</label>
+                        </div>
+                        <span id="val-C0" class="font-mono bg-blue-100/70 px-1.5 rounded text-blue-800">0.80 级</span>
                     </div>
-                    <input type="range" id="slider-C0" min="0.1" max="1" step="0.05" value="0.8" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <input type="range" id="slider-C0" min="0.1" max="1" step="0.05" value="0.8" class="w-full h-2 bg-gray-200/80 rounded-lg appearance-none cursor-pointer">
                 </div>
+
                 <div class="space-y-1">
-                    <div class="flex justify-between text-xs font-medium text-gray-700">
-                        <label>白月光固有杀伤力 (B)</label><span id="val-B" class="font-mono bg-blue-100 px-1.5 rounded text-blue-800">1.20 级</span>
+                    <div class="flex justify-between items-center text-xs font-medium text-gray-700">
+                        <div class="flex items-center gap-1">
+                            <button onclick="openModal('B')" class="text-blue-500 hover:text-blue-700 cursor-pointer text-sm">ℹ️</button>
+                            <label>白月光固有杀伤力 (B)</label>
+                        </div>
+                        <span id="val-B" class="font-mono bg-blue-100/70 px-1.5 rounded text-blue-800">1.20 级</span>
                     </div>
-                    <input type="range" id="slider-B" min="0.5" max="3" step="0.1" value="1.2" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <input type="range" id="slider-B" min="0.5" max="3" step="0.1" value="1.2" class="w-full h-2 bg-gray-200/80 rounded-lg appearance-none cursor-pointer">
                 </div>
             </div>
 
-            <div class="bg-red-50/50 p-5 rounded-xl border border-red-100 space-y-4 game-slider">
-                <h3 class="font-bold text-red-900 border-b border-red-200 pb-2 flex justify-between">
-                    <span>🎮 游戏属性配置</span><span class="text-xs text-red-600 font-normal">外部干预项参数</span>
+            <!-- 右侧：游戏属性配置 -->
+            <div class="bg-red-50/40 backdrop-blur-md border border-red-200/40 p-5 rounded-2xl space-y-5 shadow-xs game-slider">
+                <h3 class="font-bold text-red-900 border-b border-red-200/50 pb-2 flex justify-between items-center">
+                    <span>🎮 游戏属性配置</span>
+                    <span class="text-xs text-red-600 font-normal bg-red-100/50 px-2 py-0.5 rounded-md">外部干预项参数</span>
                 </h3>
+
                 <div class="space-y-1">
-                    <div class="flex justify-between text-xs font-medium text-gray-700">
-                        <label>时间吞噬度 (α)</label><span id="val-alpha" class="font-mono bg-red-100 px-1.5 rounded text-red-800">0.80 级</span>
+                    <div class="flex justify-between items-center text-xs font-medium text-gray-700">
+                        <div class="flex items-center gap-1">
+                            <button onclick="openModal('alpha')" class="text-red-500 hover:text-red-700 cursor-pointer text-sm">ℹ️</button>
+                            <label>时间吞噬度 (α)</label>
+                        </div>
+                        <span id="val-alpha" class="font-mono bg-red-100/70 px-1.5 rounded text-red-800">0.80 级</span>
                     </div>
-                    <input type="range" id="slider-alpha" min="0.1" max="1.5" step="0.1" value="0.8" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <input type="range" id="slider-alpha" min="0.1" max="1.5" step="0.1" value="0.8" class="w-full h-2 bg-gray-200/80 rounded-lg appearance-none cursor-pointer">
                 </div>
+
                 <div class="space-y-1">
-                    <div class="flex justify-between text-xs font-medium text-gray-700">
-                        <label>大脑占据度 (β)</label><span id="val-beta" class="font-mono bg-red-100 px-1.5 rounded text-red-800">0.70 级</span>
+                    <div class="flex justify-between items-center text-xs font-medium text-gray-700">
+                        <div class="flex items-center gap-1">
+                            <button onclick="openModal('beta')" class="text-red-500 hover:text-red-700 cursor-pointer text-sm">ℹ️</button>
+                            <label>大脑占据度 (β)</label>
+                        </div>
+                        <span id="val-beta" class="font-mono bg-red-100/70 px-1.5 rounded text-red-800">0.70 级</span>
                     </div>
-                    <input type="range" id="slider-beta" min="0.1" max="1.5" step="0.1" value="0.7" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <input type="range" id="slider-beta" min="0.1" max="1.5" step="0.1" value="0.7" class="w-full h-2 bg-gray-200/80 rounded-lg appearance-none cursor-pointer">
                 </div>
+
                 <div class="space-y-1">
-                    <div class="flex justify-between text-xs font-medium text-gray-700">
-                        <label>理智腐蚀度 (γ)</label><span id="val-gamma" class="font-mono bg-red-100 px-1.5 rounded text-red-800">0.30 级</span>
+                    <div class="flex justify-between items-center text-xs font-medium text-gray-700">
+                        <div class="flex items-center gap-1">
+                            <button onclick="openModal('gamma')" class="text-red-500 hover:text-red-700 cursor-pointer text-sm">ℹ️</button>
+                            <label>理智腐蚀度 (γ)</label>
+                        </div>
+                        <span id="val-gamma" class="font-mono bg-red-100/70 px-1.5 rounded text-red-800">0.30 级</span>
                     </div>
-                    <input type="range" id="slider-gamma" min="0" max="1" step="0.1" value="0.3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <input type="range" id="slider-gamma" min="0" max="1" step="0.1" value="0.3" class="w-full h-2 bg-gray-200/80 rounded-lg appearance-none cursor-pointer">
                 </div>
+
                 <div class="space-y-1">
-                    <div class="flex justify-between text-xs font-medium text-gray-700">
-                        <label>即时爽快度 (β_R)</label><span id="val-betaR" class="font-mono bg-red-100 px-1.5 rounded text-red-800">0.50 级</span>
+                    <div class="flex justify-between items-center text-xs font-medium text-gray-700">
+                        <div class="flex items-center gap-1">
+                            <button onclick="openModal('betaR')" class="text-red-500 hover:text-red-700 cursor-pointer text-sm">ℹ️</button>
+                            <label>即时爽快度 (β_R)</label>
+                        </div>
+                        <span id="val-betaR" class="font-mono bg-red-100/70 px-1.5 rounded text-red-800">0.50 级</span>
                     </div>
-                    <input type="range" id="slider-betaR" min="-0.5" max="1.5" step="0.1" value="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <input type="range" id="slider-betaR" min="-0.5" max="1.5" step="0.1" value="0.5" class="w-full h-2 bg-gray-200/80 rounded-lg appearance-none cursor-pointer">
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- ================= 核心高斯模糊详情弹窗 (Modal) ================= -->
+    <div id="info-modal" class="hidden fixed inset-0 bg-black/30 backdrop-blur-xl z-50 flex items-center justify-center p-4 transition-all duration-300">
+        <div class="bg-white/80 border border-white/40 max-w-lg w-full rounded-2xl p-6 shadow-2xl space-y-4 relative">
+            <h4 id="modal-title" class="text-lg font-bold text-gray-950 flex items-center gap-2">变量详细量化说明</h4>
+            <div id="modal-content" class="text-sm text-gray-700 space-y-3 font-sans leading-relaxed">
+                <!-- 动态填充 -->
+            </div>
+            <div class="flex justify-end pt-2">
+                <button onclick="closeModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl cursor-pointer shadow-xs transition-colors">我知道了</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 核心动力学渲染脚本 ================= -->
     <script>
         let chartFantasy, chartKill;
         const elL = document.getElementById('slider-L'), txtL = document.getElementById('val-L');
@@ -139,6 +228,87 @@
         const elGamma = document.getElementById('slider-gamma'), txtGamma = document.getElementById('val-gamma');
         const elBetaR = document.getElementById('slider-betaR'), txtBetaR = document.getElementById('val-betaR');
         const diagBox = document.getElementById('diagnostic-box');
+
+        // 变量量化全景文案数据库
+        const quantDb = {
+            L: {
+                title: "👤 正事时间比例 (L)",
+                content: `<p><b>现实定义：</b>指你清醒时间（按每天16小时计）中，被学业上课、高强度刷题或其他硬核现实爱好所占用的刚性时间比例。</p>
+                          <p><b>量化参考：</b><br>
+                          • <b>80% (12.8h)</b>: 考前地狱复习连轴转模式，防线坚不可摧。<br>
+                          • <b>60% (9.6h)</b>: 正常充实的上学学业状态。<br>
+                          • <b>20% (3.2h)</b>: 彻底放假，无所事事，空闲度暴增，极度危险。</p>`
+            },
+            H0: {
+                title: "👤 想她本能频率 (H0)",
+                content: `<p><b>现实定义：</b>在完全没有外界干扰的绝对空闲时间里，你大脑自发提取关于她的记忆的倾向概率。</p>
+                          <p><b>量化参考：</b><br>
+                          • <b>0.90 级</b>: 只要一闲下来，脑子里100%全自动全屏播放关于她的画面。<br>
+                          • <b>0.50 级</b>: 正常频率，偶尔会自发怀念。<br>
+                          • <b>0.10 级</b>: 记忆基本淡化，很少自发想起。</p>`
+            },
+            C0: {
+                title: "👤 你的理智基础 (C0)",
+                content: `<p><b>现实定义：</b>你的内在意志力和自控理智底色。决定了当你产生情绪内耗时，能否强行克制并按计划执行现实生活。</p>
+                          <p><b>量化参考：</b><br>
+                          • <b>0.90 级</b>: 绝对钢铁直男般理智，说不内耗就不内耗，严格执行计划。<br>
+                          • <b>0.50 级</b>: 普通人理智，心情好时克制得住，深夜容易偶尔防线动摇。<br>
+                          • <b>0.20 级</b>: 意志极度脆弱，处于情绪敏感脆弱期，一碰就碎。</p>`
+            },
+            B: {
+                title: "👤 白月光固有杀伤力 (B)",
+                content: `<p><b>现实定义：</b>她留在你记忆深处的固有情感权重基准（记忆滤镜加成后的暴击系数）。</p>
+                          <p><b>量化参考：</b><br>
+                          • <b>2.5 级（极限意难平）</b>: 在最无能为力的年纪遇到最想照顾的人，几乎等同于“完美恋人”。<br>
+                          • <b>1.2 级（标准白月光）</b>: 懵懂时期的青春遗憾，带着一层模糊而美好的金边滤镜。<br>
+                          • <b>0.5 级（轻微好感）</b>: 错过的某个普通好感对象，聊起来只是淡淡一笑。</p>`
+            },
+            alpha: {
+                title: "🎮 游戏时间吞噬度 (α)",
+                content: `<p><b>现实定义：</b>这款游戏对你现实空闲时间的“强力收割能力”。</p>
+                          <p><b>量化参考：</b><br>
+                          • <b>1.2 级（时间黑洞）</b>: 类似《欧洲卡车模拟2》跑长途，一脚油门下去几个小时无声无息就没了。<br>
+                          • <b>0.7 级（中等）</b>: 正常对局制游戏。<br>
+                          • <b>0.3 级（低）</b>: 休闲挂机小游戏，很难沉浸进去。</p>`
+            },
+            beta: {
+                title: "🎮 游戏大脑占据度 (β)",
+                content: `<p><b>现实定义：</b>游戏游玩时需要占用的脑力线程强弱。越烧脑、越需要极速反应，对白月光的阻断效果越好。</p>
+                          <p><b>量化参考：</b><br>
+                          • <b>1.2 级（全面占满）</b>: 类似《神力科莎Competizione》贴地走线极限控车，或者《杀戮尖塔》精算每一点费用和抽牌，大脑全负荷运转，根本没空胡思乱想。<br>
+                          • <b>0.5 级（低）</b>: 快餐式爽游或无脑刷子，容易一边打游戏一边神游，导致防线崩溃。</p>`
+            },
+            gamma: {
+                title: "🎮 游戏理智腐蚀度 (γ)",
+                content: `<p><b>现实定义：</b>玩游戏对你现实自控力的副作用。部分游戏具有强烈的成瘾性，玩完之后会让人精神委靡、不想干正事。</p>
+                          <p><b>量化参考：</b><br>
+                          • <b>0.8 级（重度腐蚀）</b>: 容易沉迷其中，作息打破，不玩就抓耳挠腮，玩完陷入深深的空虚与颓废。<br>
+                          • <b>0.2 级（轻微）</b>: 纯粹的硬核模拟器或单机，能做到随时存档、拿得起放得下。</p>`
+            },
+            betaR: {
+                title: "🎮 游戏即时爽快度 (β_R)",
+                content: `<p><b>现实定义：</b>游戏能带给你的即时多巴胺快乐加成，直接用于提升你的近期情感体验平均值。</p>
+                          <p><b>量化参考：</b><br>
+                          • <b>1.0 级（多巴胺狂飙）</b>: 类似《赛博朋克2077》神级割草、或是竞技游戏打出完美翻盘，快乐反馈极强。<br>
+                          • <b>0.5 级（中等）</b>: 模拟器看风景或运货带来的平稳舒适感。<br>
+                          • <b>-0.2 级（受苦）</b>: 硬核高难受苦游戏，经常卡关死到高血压，近期体验反而变差。</p>`
+            }
+        };
+
+        function openModal(key) {
+            const node = quantDb[key];
+            document.getElementById('modal-title').innerHTML = node.title;
+            document.getElementById('modal-content').innerHTML = node.content;
+            const modal = document.getElementById('info-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('opacity-100'), 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('info-modal');
+            modal.classList.remove('opacity-100');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
 
         function calculateSystem() {
             const L = parseFloat(elL.value), H0 = parseFloat(elH0.value), C0 = parseFloat(elC0.value);
@@ -172,7 +342,6 @@
             return { R_vals, F_total, K_vals, best_R: R_vals[minIdx], minK, L, max_R, baseK: K_vals[0] };
         }
 
-        // 判断战损等级标签
         function getKLabel(k) {
             if (k === 0) return "绝对防御";
             if (k <= 0.3) return "轻微波动";
@@ -197,32 +366,28 @@
             const baseLabel = getKLabel(data.baseK);
             const minLabel = getKLabel(data.minK);
 
-            // 完美的逻辑单调性与阈值闭环判定
             if (game_hours >= free_hours - 0.5 && free_hours > 0) {
                 diagBox.innerText = `🚨 现实逃避：每天剩 ${free_hours.toFixed(1)}h，全拿来打游戏麻痹自己。已被现实破防！【当前: ${minLabel} K=${data.minK.toFixed(2)}】`;
-                diagBox.className = "w-full text-center py-4 px-6 rounded-xl font-bold text-lg shadow-xs transition-all duration-300 bg-red-50 text-red-800 border border-red-200";
+                diagBox.className = "w-full text-center py-4 px-6 rounded-2xl font-bold text-lg shadow-sm transition-all duration-300 liquid-glass bg-red-100/50 border-red-300 text-red-900";
             } else if (game_hours <= 0.1) {
-                // 如果最优解是不打游戏 (曲线单调递增 或 本来就为0)
                 if (data.baseK <= 0.3) {
                     diagBox.innerText = `🛡️ 状态极佳：保持现在的充实感！无需游戏干预，她也无法破防。【当前: ${baseLabel} K=${data.baseK.toFixed(2)}】`;
-                    diagBox.className = "w-full text-center py-4 px-6 rounded-xl font-bold text-lg shadow-xs transition-all duration-300 bg-green-50 text-green-800 border border-green-200";
+                    diagBox.className = "w-full text-center py-4 px-6 rounded-2xl font-bold text-lg shadow-sm transition-all duration-300 liquid-glass bg-green-100/50 border-green-300 text-green-900";
                 } else {
-                    diagBox.innerText = `⚠️ 绝对禁止！游戏只会加速理智崩塌！当前唯一解是【禁游去干正事】。【当前不玩已是: ${baseLabel} K=${data.baseK.toFixed(2)}】`;
-                    diagBox.className = "w-full text-center py-4 px-6 rounded-xl font-bold text-lg shadow-xs transition-all duration-300 bg-red-50 text-red-800 border border-red-200";
+                    diagBox.innerText = `⚠️ 绝对禁止！该游戏只会加速理智崩塌！当前唯一解是【禁游去干正事】。【当前不玩已是: ${baseLabel} K=${data.baseK.toFixed(2)}】`;
+                    diagBox.className = "w-full text-center py-4 px-6 rounded-2xl font-bold text-lg shadow-xs transition-all duration-300 liquid-glass bg-red-100/50 border-red-300 text-red-900";
                 }
             } else if (data.minK < data.baseK) {
-                // 曲线存在下降空间，打游戏有用
                 if (data.minK === 0) {
                     diagBox.innerText = `✅ 完美转移：干完正事后，每天打 ${game_hours.toFixed(1)}h 游戏，可将杀伤力降至 0。【达成: ${minLabel}】`;
-                    diagBox.className = "w-full text-center py-4 px-6 rounded-xl font-bold text-lg shadow-xs transition-all duration-300 bg-blue-50 text-blue-800 border border-blue-200";
+                    diagBox.className = "w-full text-center py-4 px-6 rounded-2xl font-bold text-lg shadow-sm transition-all duration-300 liquid-glass bg-blue-100/50 border-blue-300 text-blue-900";
                 } else {
                     diagBox.innerText = `💡 战损压制：每天打 ${game_hours.toFixed(1)}h 游戏，能将杀伤力从 ${data.baseK.toFixed(2)} 强行压制到 ${data.minK.toFixed(2)}。【改善至: ${minLabel}】`;
-                    diagBox.className = "w-full text-center py-4 px-6 rounded-xl font-bold text-lg shadow-xs transition-all duration-300 bg-gray-100 text-gray-800 border border-gray-300";
+                    diagBox.className = "w-full text-center py-4 px-6 rounded-2xl font-bold text-lg shadow-sm transition-all duration-300 liquid-glass bg-gray-100/60 border-gray-300 text-gray-900";
                 }
             } else {
-                // 兜底异常
                 diagBox.innerText = `⚠️ 饮鸩止渴：越玩越崩！游戏产出比极低，请立即退出游戏！`;
-                diagBox.className = "w-full text-center py-4 px-6 rounded-xl font-bold text-lg shadow-xs transition-all duration-300 bg-orange-50 text-orange-800 border border-orange-200";
+                diagBox.className = "w-full text-center py-4 px-6 rounded-2xl font-bold text-lg shadow-sm transition-all duration-300 liquid-glass bg-orange-100/50 border-orange-300 text-orange-900";
             }
 
             chartFantasy.data.labels = data.R_vals.map(r => r * 16);
