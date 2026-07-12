@@ -8,6 +8,15 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- 引入 Chart.js 用于绘制丝滑的高性能科学图表 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- 🛠️ 核心修复：引入 MathJax 用于纯前端渲染 LaTeX 优美公式 -->
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
         input[type="range"] { accent-color: #3b82f6; }
         .game-slider input[type="range"] { accent-color: #ef4444; }
@@ -22,8 +31,9 @@
                 <h1 class="text-2xl font-bold text-gray-900">Moonlight Dynamics <span class="text-sm font-normal text-gray-500">v3.0 FE Web</span></h1>
                 <p class="text-xs text-gray-500 mt-1">A psychological dynamics model exploring fantasy frequency.</p>
             </div>
+            <!-- 🛠️ 修复点：改用标准的 $ 符号包裹 LaTeX 公式 -->
             <div class="bg-gray-100 px-3 py-2 rounded-lg text-xs font-mono text-gray-700">
-                核心基准: K = [max(F_eff * B - E, 0) * S^α] / C
+                核心基准: $K = \frac{\max(F_{eff} \cdot B - E, 0) \cdot S^\alpha}{C}$
             </div>
         </div>
 
@@ -47,9 +57,9 @@
         <!-- 参数标定手册 -->
         <div class="bg-gray-800 text-gray-300 p-4 rounded-xl shadow-xs text-xs space-y-1 font-sans leading-relaxed">
             <div class="font-bold text-white text-sm mb-1">💡 参数标定锚点参考（清醒时间 = 16小时）：</div>
-            <p>• <b>时间吞吞噬度 α</b>：欧卡2(ETS2)跑长途 = 1.2 (极杀时间) ； 休闲小游戏 = 0.4</p>
+            <p>• <b>时间吞噬度 α</b>：欧卡2(ETS2)跑长途 = 1.2 (极杀时间) ； 休闲小游戏 = 0.4</p>
             <p>• <b>大脑占据度 β</b>：神力科莎(ACC)抠细节 / 杀戮尖塔算牌 = 1.2 (脑子占满) ； 挂机放置 = 0.2</p>
-            <p>• <b>即时爽快度 β_R</b>：赛博朋克2077黑客流秒怪 = 1.0 (多巴胺狂飙) ； 硬核受苦游戏 = -0.2</p>
+            <p>• <b>即时爽快度 β_R</b>：赛博朋克2077黑客流秒怪 = 1.0 (多巴胺狂飙) ； 硬核受受苦游戏 = -0.2</p>
             <p>• <b>固有杀伤力 B</b>：普通前任 = 0.5 ； 极度意难平 = 2.5</p>
         </div>
 
@@ -139,10 +149,8 @@
 
     <!-- ================= 核心动力学渲染脚本 ================= -->
     <script>
-        // 初始化图表全局变量
         let chartFantasy, chartKill;
 
-        // 获取 DOM 元素
         const elL = document.getElementById('slider-L'), txtL = document.getElementById('val-L');
         const elH0 = document.getElementById('slider-H0'), txtH0 = document.getElementById('val-H0');
         const elC0 = document.getElementById('slider-C0'), txtC0 = document.getElementById('val-C0');
@@ -153,13 +161,11 @@
         const elBetaR = document.getElementById('slider-betaR'), txtBetaR = document.getElementById('val-betaR');
         const diagBox = document.getElementById('diagnostic-box');
 
-        // 系统核心方程计算方法
         function calculateSystem() {
             const L = parseFloat(elL.value), H0 = parseFloat(elH0.value), C0 = parseFloat(elC0.value);
             const B = parseFloat(elB.value), alpha_g = parseFloat(elAlpha.value), beta_g = parseFloat(elBeta.value);
             const gamma_g = parseFloat(elGamma.value), beta_R = parseFloat(elBetaR.value);
 
-            // 动态安全边界计算
             const max_R_by_S = alpha_g > 0 ? (1.0 - L) / alpha_g : 1.0;
             const max_R_by_C = gamma_g > 0 ? (C0 - 0.05) / gamma_g : 1.0;
             let max_R = Math.min(max_R_by_S, max_R_by_C, 1.0);
@@ -186,7 +192,6 @@
                 K_vals.push(k);
             }
 
-            // 寻找最优解（战损最低点）
             let minK = K_vals[0];
             let minIdx = 0;
             for (let i = 1; i < K_vals.length; i++) {
@@ -200,9 +205,7 @@
             return { R_vals, F_total, K_vals, best_R, minK, L, max_R };
         }
 
-        // 更新 UI 面板与逻辑诊断
         function updateUI() {
-            // 更新滑块文本单位
             txtL.innerText = Math.round(elL.value * 100) + '%';
             txtH0.innerText = parseFloat(elH0.value).toFixed(2) + ' 级';
             txtC0.innerText = parseFloat(elC0.value).toFixed(2) + ' 级';
@@ -213,12 +216,9 @@
             txtBetaR.innerText = parseFloat(elBetaR.value).toFixed(2) + ' 级';
 
             const data = calculateSystem();
-
-            // 物理换算 (按清醒时间 16 小时计算)
             const free_hours = (1.0 - data.L) * 16.0;
             const game_hours = data.best_R * 16.0;
 
-            // AI 状态诊断诊断分类器
             if (game_hours >= free_hours - 0.5 && free_hours > 0) {
                 diagBox.innerText = `🚨 现实崩塌：每天剩 ${free_hours.toFixed(1)}h，需打 ${game_hours.toFixed(1)}h 游戏麻痹自己。这不是防守，是逃避！已被破防！`;
                 diagBox.className = "w-full text-center py-4 px-6 rounded-xl font-bold text-lg shadow-xs transition-all duration-300 bg-red-50 text-red-800 border border-red-200";
@@ -233,7 +233,6 @@
                 diagBox.className = "w-full text-center py-4 px-6 rounded-xl font-bold text-lg shadow-xs transition-all duration-300 bg-gray-100 text-gray-800 border border-gray-300";
             }
 
-            // 刷新 Chart.js 图表曲线
             chartFantasy.data.labels = data.R_vals.map(r => (r * 16).toFixed(1) + 'h');
             chartFantasy.data.datasets[0].data = data.F_total;
             chartFantasy.update('none');
@@ -241,13 +240,11 @@
             chartKill.data.labels = data.R_vals.map(r => (r * 16).toFixed(1) + 'h');
             chartKill.data.datasets[0].data = data.K_vals;
             
-            // 动态调节战损图 Y 轴最大值防止出圈
             const maxK = Math.max(...data.K_vals);
             chartKill.options.scales.y.max = maxK > 1.5 ? Math.ceil(maxK * 1.1 * 10) / 10 : 1.5;
             chartKill.update('none');
         }
 
-        // 初始化 Chart.js 实例
         function initCharts() {
             const ctxF = document.getElementById('chart-fantasy').getContext('2d');
             chartFantasy = new Chart(ctxF, {
@@ -263,7 +260,6 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: true, title: { display: true, text: '每天打游戏小时数', font: { size: 10 } } }, y: { min: 0, max: 1.5 } } }
             });
 
-            // 监听所有滑块的实时拖动
             const inputs = document.querySelectorAll('input[type="range"]');
             inputs.forEach(input => input.addEventListener('input', updateUI));
 
