@@ -12,40 +12,111 @@
         window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <style>
-        input[type="range"] { accent-color: #3b82f6; }
-        .game-slider input[type="range"] { accent-color: #ef4444; }
-        /* 酷炫的炫彩科技感渐变背景，用来衬托高斯模糊和流体玻璃的透光感 */
-        .glass-bg {
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 40%, #dee2e6 100%);
-            position: relative;
-            overflow-x: hidden;
-        }
-        .glass-bg::before {
-            content: ""; position: fixed; top: -10%; left: -10%; width: 50vw; height: 50vw;
-            background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(0,0,0,0) 70%);
-            z-index: 0; pointer-events: none;
-        }
-        .glass-bg::after {
-            content: ""; position: fixed; bottom: -10%; right: -10%; width: 50vw; height: 50vw;
-            background: radial-gradient(circle, rgba(239,68,68,0.1) 0%, rgba(0,0,0,0) 70%);
-            z-index: 0; pointer-events: none;
-        }
-        /* Liquid Glass 流体玻璃核心样式 */
-        .liquid-glass {
-            background: rgba(255, 255, 255, 0.45);
-            backdrop-filter: blur(16px) saturate(120%);
-            -webkit-backdrop-filter: blur(16px) saturate(120%);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
-        }
-        .liquid-glass-dark {
-            background: rgba(31, 41, 55, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-    </style>
+   <style>
+    /* 页面基础科技感渐变背景 */
+    .glass-bg {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 40%, #dee2e6 100%);
+        position: relative;
+        overflow-x: hidden;
+    }
+    .glass-bg::before {
+        content: ""; position: fixed; top: -10%; left: -10%; width: 50vw; height: 50vw;
+        background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(0,0,0,0) 70%);
+        z-index: 0; pointer-events: none;
+    }
+    .glass-bg::after {
+        content: ""; position: fixed; bottom: -10%; right: -10%; width: 50vw; height: 50vw;
+        background: radial-gradient(circle, rgba(239,68,68,0.1) 0%, rgba(0,0,0,0) 70%);
+        z-index: 0; pointer-events: none;
+    }
+    
+    /* 容器的流体玻璃样式 */
+    .liquid-glass {
+        background: rgba(255, 255, 255, 0.45);
+        backdrop-filter: blur(16px) saturate(120%);
+        -webkit-backdrop-filter: blur(16px) saturate(120%);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+    }
+    .liquid-glass-dark {
+        background: rgba(31, 41, 55, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* ========================================= */
+    /* 💧 核心：原生滑块的 Liquid Glass 水滴化重构 */
+    /* ========================================= */
+    input[type="range"] {
+        -webkit-appearance: none; /* 扒掉原生皮肤 */
+        width: 100%;
+        height: 8px; /* 轨道厚度 */
+        border-radius: 4px;
+        background: #e5e7eb; /* 默认轨道灰色 */
+        outline: none;
+        transition: background 0.1s ease;
+    }
+
+    /* 针对自身条件（左侧）滑块：蓝色高亮填充 */
+    .blue-slider input[type="range"] {
+        /* JS 会实时动态覆盖这个背景，形成进度条效果 */
+    }
+
+    /* 针对游戏属性（右侧）滑块：红色高亮填充 */
+    .red-slider input[type="range"] {
+        /* JS 会实时动态覆盖这个背景，形成进度条效果 */
+    }
+
+    /* 🌟 水滴滑块 Thumb 核心设计 (复刻图里那个胖胖的玻璃胶囊) */
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 44px;         /* 像水滴一样的椭圆形 */
+        height: 26px;
+        border-radius: 13px; /* 胶囊圆角 */
+        
+        /* 核心玻璃折射与高光 */
+        background: rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(6px);         /* 模拟折射背景轨道 */
+        -webkit-backdrop-filter: blur(6px);
+        border: 1.5px solid rgba(255, 255, 255, 0.9);
+        
+        /* 疯狂的 box-shadow 捏出 3D 水滴质感 */
+        box-shadow: 
+            inset 0 3px 6px rgba(255, 255, 255, 0.8),   /* 顶部内高光，像水面的反光 */
+            inset 0 -2px 4px rgba(0, 0, 0, 0.08),       /* 底部内暗角，做出立体厚度 */
+            0 4px 10px rgba(0, 0, 0, 0.15),             /* 投射在轨道上的阴影 */
+            0 8px 20px rgba(59, 130, 246, 0.1);         /* 淡淡的蓝色光晕溢出 */
+            
+        cursor: grab;
+        /* 🚀 物理引擎：极度 Q弹的贝塞尔曲线 (模拟果冻形变) */
+        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+    }
+
+    /* Hover 悬停：水滴微微放大并亮起 */
+    input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.15); /* 放大 15% */
+        background: rgba(255, 255, 255, 0.5);
+        box-shadow: 
+            inset 0 3px 6px rgba(255, 255, 255, 0.9),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.05),
+            0 6px 14px rgba(0, 0, 0, 0.2),
+            0 8px 25px rgba(59, 130, 246, 0.25);
+    }
+
+    /* Active 拖拽中：水滴被手指按扁，变得紧致 */
+    input[type="range"]::-webkit-slider-thumb:active {
+        cursor: grabbing;
+        transform: scale(0.92); /* 缩小并按扁 */
+        backdrop-filter: blur(2px);
+        background: rgba(255, 255, 255, 0.7);
+        box-shadow: 
+            inset 0 2px 4px rgba(255, 255, 255, 0.9),
+            inset 0 -1px 2px rgba(0, 0, 0, 0.1),
+            0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+</style>
 </head>
 <body class="glass-bg min-h-screen p-4 md:p-8 font-sans text-gray-800">
 
@@ -349,7 +420,27 @@
             return "彻底破防";
         }
 
-        function updateUI() {
+       function updateUI() {
+            // ----- 新增：给水滴滑块注入动态的轨道底色 -----
+            document.querySelectorAll('input[type="range"]').forEach(input => {
+                const min = parseFloat(input.min) || 0;
+                const max = parseFloat(input.max) || 1;
+                const val = parseFloat(input.value);
+                const percentage = ((val - min) / (max - min)) * 100;
+                
+                // 左侧你的属性用蓝色，右侧游戏属性用红色
+                const isGameSlider = input.id.includes('alpha') || input.id.includes('beta') || input.id.includes('gamma');
+                const fillColor = isGameSlider ? '#ef4444' : '#3b82f6'; 
+                const emptyColor = '#e5e7eb';
+                
+                // 用 CSS 渐变实时绘制滑块的进度底色
+                input.style.background = `linear-gradient(to right, ${fillColor} ${percentage}%, ${emptyColor} ${percentage}%)`;
+            });
+            // ----------------------------------------------
+
+            // (下面保留原本更新文字和计算的逻辑...)
+            txtL.innerText = Math.round(elL.value * 100) + '%';
+            // ...
             txtL.innerText = Math.round(elL.value * 100) + '%';
             txtH0.innerText = parseFloat(elH0.value).toFixed(2) + ' 级';
             txtC0.innerText = parseFloat(elC0.value).toFixed(2) + ' 级';
