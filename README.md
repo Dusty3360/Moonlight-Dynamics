@@ -1,6 +1,8 @@
 # 白月光吸引力动力学方程研究项目
 # Moonlight Dynamics
 
+[![Live Demo](https://img.shields.io/badge/🌙_在线体验-moonlight--dynamics.pages.dev-blue?style=for-the-badge)](https://moonlight-dynamics.pages.dev/)
+
 > 让情绪进入坐标系，让幻想拥有可计算的轨迹。  
 > Let emotions enter the coordinate system, and let imagination become a computable trajectory.
 
