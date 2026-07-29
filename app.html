@@ -525,30 +525,57 @@
             });
 
             // ---- 触觉反馈系统 (Haptic Feedback) ----
-            // 兼容 Android / HarmonyOS (Chromium 内核)，iOS Safari 不支持会静默忽略
-            // 注意：需要 HTTPS 环境 + 用户手势触发
+            // Android Chrome/Edge 需要 "sticky user activation" (click/tap 事件)
+            // 短于 10ms 的震动可能被系统忽略
             const canVibrate = typeof navigator.vibrate === 'function';
+            let hapticActivated = false; // 追踪是否已有用户手势激活
 
             function hapticTick(ms) {
-                try { if (canVibrate) navigator.vibrate(ms); } catch(e) {}
+                if (!canVibrate) return false;
+                try { return navigator.vibrate(ms); } catch(e) { return false; }
             }
 
+            // 方案：在滑块区域上放一个透明的 "激活层"
+            // 首次 click/tap 任意滑块区域时，发送一个明显的震动来激活
             document.querySelectorAll('input[type="range"]').forEach(input => {
-                // 记录上一次的值，用于检测是否跨越了一个 step
                 let lastValue = parseFloat(input.value);
 
-                // 按下滑块：30ms 短震动（按下反馈）
-                input.addEventListener('pointerdown', () => hapticTick(30));
+                // click 事件（最可靠的用户手势）—— 首次 tap 时激活震动
+                input.addEventListener('click', () => {
+                    if (!hapticActivated) {
+                        hapticTick(50); // 首次 50ms 明显震动
+                        hapticActivated = true;
+                    }
+                });
 
-                // 拖动滑块：每变化一个 step 刻度，20ms 微震动（刻度感）
+                // 拖动/变化事件：每步 30ms 刻度震动
                 input.addEventListener('input', () => {
                     const currentValue = parseFloat(input.value);
                     if (currentValue !== lastValue) {
-                        hapticTick(20);
+                        hapticTick(30);
                         lastValue = currentValue;
                     }
                     updateUI();
                 });
+            });
+
+            // ---- 震动调试测试按钮（页面底部） ----
+            const debugContainer = document.createElement('div');
+            debugContainer.id = 'haptic-debug';
+            debugContainer.style.cssText = 'text-align:center; padding:16px; margin-top:16px; font-size:12px; color:#888;';
+            const apiStatus = canVibrate ? '✅ navigator.vibrate 可用' : '❌ navigator.vibrate 不可用';
+            debugContainer.innerHTML = `
+                <p style="margin-bottom:8px">${apiStatus} | UA: ${navigator.userAgent.slice(0, 60)}...</p>
+                <button id="btn-vibrate-test" style="padding:10px 24px; background:#3b82f6; color:#fff; border:none; border-radius:12px; font-size:14px; cursor:pointer; font-weight:600;">
+                    📳 点击测试震动 (200ms)
+                </button>
+                <p id="vibrate-result" style="margin-top:8px; font-size:11px; color:#666;"></p>
+            `;
+            document.querySelector('.max-w-7xl').appendChild(debugContainer);
+            document.getElementById('btn-vibrate-test').addEventListener('click', () => {
+                const result = hapticTick(200);
+                document.getElementById('vibrate-result').textContent = 
+                    `vibrate(200) 返回值: ${result} — 时间: ${new Date().toLocaleTimeString()}`;
             });
 
             updateUI();
