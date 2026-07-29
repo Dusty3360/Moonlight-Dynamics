@@ -524,7 +524,33 @@
                 }
             });
 
-            document.querySelectorAll('input[type="range"]').forEach(input => input.addEventListener('input', updateUI));
+            // ---- 触觉反馈系统 (Haptic Feedback) ----
+            // 兼容 Android / HarmonyOS (Chromium 内核)，iOS Safari 不支持会静默忽略
+            const canVibrate = 'vibrate' in navigator;
+
+            function hapticTick(ms = 8) {
+                if (canVibrate) navigator.vibrate(ms);
+            }
+
+            document.querySelectorAll('input[type="range"]').forEach(input => {
+                // 记录上一次的值，用于检测是否跨越了一个 step
+                let lastValue = parseFloat(input.value);
+
+                // 按下滑块：15ms 短震动
+                input.addEventListener('touchstart', () => hapticTick(15), { passive: true });
+                input.addEventListener('mousedown',  () => hapticTick(15));
+
+                // 拖动滑块：每变化一个 step 刻度，8ms 微震动
+                input.addEventListener('input', () => {
+                    const currentValue = parseFloat(input.value);
+                    if (currentValue !== lastValue) {
+                        hapticTick(8);
+                        lastValue = currentValue;
+                    }
+                    updateUI();
+                });
+            });
+
             updateUI();
         }
 
