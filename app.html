@@ -525,34 +525,36 @@
             });
 
             // ---- 触觉反馈系统 (Haptic Feedback) ----
-            // Android Chrome/Edge 需要 "sticky user activation" (click/tap 事件)
-            // 短于 10ms 的震动可能被系统忽略
+            // 策略：短脉冲 + 主动刹车 + 防抖冷却
+            // - 每次震动前先 vibrate(0) 强制刹停残余振动
+            // - 10ms 极短脉冲：新款马达(0916turbo)清脆，老款(9595)也不会糊
+            // - 45ms 冷却期：确保马达完全停转后再接受下一次触发
             const canVibrate = typeof navigator.vibrate === 'function';
-            let hapticActivated = false; // 追踪是否已有用户手势激活
+            let lastTickTime = 0;
+            const TICK_COOLDOWN = 45; // 冷却期 (ms)，防止马达来不及刹车
 
             function hapticTick(ms) {
-                if (!canVibrate) return false;
-                try { return navigator.vibrate(ms); } catch(e) { return false; }
+                if (!canVibrate) return;
+                const now = Date.now();
+                if (now - lastTickTime < TICK_COOLDOWN) return; // 冷却中，跳过
+                lastTickTime = now;
+                try {
+                    navigator.vibrate(0);  // 🛑 主动刹车：立即停止上一次残余振动
+                    navigator.vibrate(ms); // ⚡ 发出短脉冲
+                } catch(e) {}
             }
 
-            // 方案：在滑块区域上放一个透明的 "激活层"
-            // 首次 click/tap 任意滑块区域时，发送一个明显的震动来激活
             document.querySelectorAll('input[type="range"]').forEach(input => {
                 let lastValue = parseFloat(input.value);
 
-                // click 事件（最可靠的用户手势）—— 首次 tap 时激活震动
-                input.addEventListener('click', () => {
-                    if (!hapticActivated) {
-                        hapticTick(50); // 首次 50ms 明显震动
-                        hapticActivated = true;
-                    }
-                });
+                // 按下滑块：稍强的 18ms 脉冲（触感确认）
+                input.addEventListener('click', () => hapticTick(18));
 
-                // 拖动/变化事件：每步 30ms 刻度震动
+                // 拖动滑块：每步 10ms 刻度脉冲（轻柔刻度感）
                 input.addEventListener('input', () => {
                     const currentValue = parseFloat(input.value);
                     if (currentValue !== lastValue) {
-                        hapticTick(30);
+                        hapticTick(10);
                         lastValue = currentValue;
                     }
                     updateUI();
