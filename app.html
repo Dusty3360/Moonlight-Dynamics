@@ -525,195 +525,123 @@
             });
 
             // ============================================================
-            // 🔊 设备自适应触觉反馈系统 (Device-Adaptive Haptic Engine)
+            // 🔊 设备自适应触觉反馈系统 v3 (Device-Adaptive Haptic Engine)
             // ============================================================
-            // 设计哲学：
-            //   Web Vibration API 无法控制振动强度(amplitude)，只能控制时长。
-            //   但马达物理特性决定：脉冲越长 → 振子有更多时间加速 → 峰值振幅越大。
-            //   因此：对弱感知设备(0916turbo被系统压制)，用更长脉冲 + 多脉冲叠加
-            //         对强感知设备(9595/0809)，用短脉冲保持清脆不糊。
-            //
-            // 马达等级体系：
-            //   ULTRA    - 0916 Turbo 系列 (一加12等): 马达素质极高但Web层体感弱，需超强补偿
-            //   FLAGSHIP - 0916/1216/1010 (一加11/Mate80Pro/小米13Ultra): 旗舰马达，中强补偿
-            //   STANDARD - 9595 (Mate50Pro/Mate40Pro/vivo X80): 中端标准，适中参数
-            //   BUDGET   - 0809 及更小/未识别设备: 入门马达，用最短脉冲防止糊掉
+            // v3 核心修复：Chrome UA Reduction 把 userAgent 变成 "Android 10; K"
+            //   所有设备型号被隐藏！之前的 UA 正则全部失效！
+            //   一加13一直走的 BUDGET 兜底 = 5ms + 60ms冷却 + 刹车全开 = 最弱
+            // 解决方案：navigator.userAgentData.getHighEntropyValues() 获取真实型号
             // ============================================================
 
             const canVibrate = typeof navigator.vibrate === 'function';
             let lastTickTime = 0;
+            let hapticProfile = null;
 
-            // ---- 第一层：设备检测与马达等级推断 ----
             const HapticTier = Object.freeze({
-                ULTRA:    'ULTRA',     // 0916 Turbo: 超强补偿
-                FLAGSHIP: 'FLAGSHIP',  // 0916/1216/1010: 旗舰补偿
-                STANDARD: 'STANDARD',  // 9595: 标准参数
-                BUDGET:   'BUDGET'     // 0809/未知: 保守短脉冲
+                ULTRA: 'ULTRA', FLAGSHIP: 'FLAGSHIP',
+                STANDARD: 'STANDARD', BUDGET: 'BUDGET'
             });
 
-            // 通过 UserAgent 推断设备马达等级
-            // 注意：UA 不直接暴露马达型号，我们通过设备型号反查已知马达规格
-            function detectHapticTier() {
-                const ua = navigator.userAgent || '';
-                
-                // ======= ULTRA 级: 0916 Turbo 系列 =======
-                // 一加12 (CPH2581/CPH2583/PHB110)
-                if (/CPH258[13]|PHB110/i.test(ua)) return HapticTier.ULTRA;
-                // Redmi K80 至尊版 / K80 Ultra (可能型号: 24108RN...)
-                if (/24108RN|K80\s*Ultra|K80\s*至尊/i.test(ua)) return HapticTier.ULTRA;
-                // 一加 Ace 3 Pro (PJZ110)
-                if (/PJZ110/i.test(ua)) return HapticTier.ULTRA;
+            // ---- 设备型号 → 马达等级映射表 ----
+            const MODEL_RULES = [
+                // ULTRA: 0916 Turbo / 顶级马达
+                { p: /PJZ110|CPH265[359]/i,       t: 'ULTRA' },    // 一加13
+                { p: /CPH258[13]/i,                t: 'ULTRA' },    // 一加12
+                { p: /PJD110/i,                    t: 'ULTRA' },    // 一加Ace3Pro
+                { p: /24108RN/i,                   t: 'ULTRA' },    // Redmi K80至尊
+                // FLAGSHIP: 0916/1216/1010
+                { p: /HBN-/i,                      t: 'FLAGSHIP' }, // Mate 80 Pro
+                { p: /CPH244[9]|CPH2451|PHB110/i,  t: 'FLAGSHIP' }, // 一加11
+                { p: /ALN-/i,                      t: 'FLAGSHIP' }, // Mate 60 Pro
+                { p: /2304FPN6DC/i,                t: 'FLAGSHIP' }, // 小米13Ultra
+                { p: /2201122[CG]/i,               t: 'FLAGSHIP' }, // 小米12Pro
+                // STANDARD: 9595
+                { p: /DCO-/i,                      t: 'STANDARD' }, // Mate 50 Pro
+                { p: /NOH-/i,                      t: 'STANDARD' }, // Mate 40 Pro
+                { p: /V218[35]A/i,                 t: 'STANDARD' }, // vivo X80
+            ];
+            const BRAND_RULES = [
+                { p: /OnePlus|CPH2[4-9]/i,                     t: 'FLAGSHIP' },
+                { p: /HUAWEI|HONOR|HarmonyOS/i,                t: 'STANDARD' },
+                { p: /SM-S9|SM-S8|SM-N9|SM-F9|Samsung/i,      t: 'STANDARD' },
+                { p: /Xiaomi|Redmi|POCO/i,                     t: 'BUDGET' },
+            ];
 
-                // ======= FLAGSHIP 级: 0916/1216/1010 =======
-                // 华为 Mate 80 Pro (1216马达, 型号 HBN-AL00/HBN-AL10 等)
-                if (/HBN-[A-Z]{2}\d{2}/i.test(ua)) return HapticTier.FLAGSHIP;
-                // 一加11 (CPH2449/CPH2451/PHB110) - 首发 0916
-                if (/CPH244[9]|CPH2451/i.test(ua)) return HapticTier.FLAGSHIP;
-                // 小米13 Ultra (2304FPN6DC)
-                if (/2304FPN6DC/i.test(ua)) return HapticTier.FLAGSHIP;
-                // 小米12 Pro (2201122C/G)
-                if (/2201122[CG]/i.test(ua)) return HapticTier.FLAGSHIP;
-                // 华为 Mate 60 Pro (ALN-AL10/AL00)
-                if (/ALN-[A-Z]{2}\d{2}/i.test(ua)) return HapticTier.FLAGSHIP;
-                // 华为 Mate 60 RS (HBN 系列)
-                if (/ALN-[A-Z]{2}/i.test(ua)) return HapticTier.FLAGSHIP;
-
-                // ======= STANDARD 级: 9595 马达 =======
-                // 华为 Mate 50 Pro (DCO-AL00/LX9)
-                if (/DCO-[A-Z]{2}\d{2}|DCO-LX9/i.test(ua)) return HapticTier.STANDARD;
-                // 华为 Mate 40 Pro (NOH-AN00/AL10)
-                if (/NOH-[A-Z]{2}\d{2}/i.test(ua)) return HapticTier.STANDARD;
-                // vivo X80 系列 (V2183A/V2185A)
-                if (/V218[35]A/i.test(ua)) return HapticTier.STANDARD;
-                // iQOO 10 Pro (V2218A)
-                if (/V2218A/i.test(ua)) return HapticTier.STANDARD;
-
-                // ======= 品牌级粗粒度兜底推断 =======
-                // HarmonyOS 设备 (华为/荣耀近年旗舰普遍 >= 9595)
-                if (/HarmonyOS|HUAWEI|HONOR/i.test(ua)) {
-                    // 尝试提取型号中的系列信息做粗分
-                    // Mate/P 系列 Pro 及以上 → 至少 STANDARD
-                    if (/Mate\s*\d{2,}|P\d{2}\s*Pro|Magic\s*[5-9V]/i.test(ua)) return HapticTier.STANDARD;
-                    return HapticTier.BUDGET; // 华为中低端
-                }
-                // 一加系列 (近年旗舰普遍 >= 0916)
-                if (/OnePlus/i.test(ua)) {
-                    if (/OnePlus\s*(1[2-9]|[2-9]\d)/i.test(ua)) return HapticTier.FLAGSHIP;
-                    if (/OnePlus\s*(1[01]|[89])/i.test(ua)) return HapticTier.STANDARD;
-                    return HapticTier.BUDGET;
-                }
-                // 小米/Redmi 系列
-                if (/Xiaomi|Redmi|POCO/i.test(ua)) {
-                    // K80/K70 Pro 等高端 Redmi
-                    if (/K[78]\d\s*Pro|K[89]\d/i.test(ua)) return HapticTier.FLAGSHIP;
-                    return HapticTier.BUDGET;
-                }
-                // 三星 Galaxy S/Note 系列 (通常自研马达，体感尚可)
-                if (/SM-S9|SM-S8|SM-N9|SM-F9/i.test(ua)) return HapticTier.STANDARD;
-                // iPhone (iOS 不支持 navigator.vibrate，但以防万一)
-                if (/iPhone/i.test(ua)) return HapticTier.FLAGSHIP;
-                
-                return HapticTier.BUDGET; // 兜底：未识别设备，用最保守参数
+            function classifyModel(str) {
+                if (!str) return null;
+                for (const r of MODEL_RULES) { if (r.p.test(str)) return r.t; }
+                for (const r of BRAND_RULES) { if (r.p.test(str)) return r.t; }
+                return null;
             }
 
-            // ---- 第二层：各马达等级的触觉参数配置 ----
-            const HAPTIC_PROFILES = {
-                // 0916 Turbo: 力大砖飞模式 🧱💨
-                // 真相：第一版震动最强是因为 零冷却+零刹车 → 马达被input事件连续轰炸
-                // 0916T 刹车 <1ms，完全不需要保护，直接回归暴力连续模式
-                [HapticTier.ULTRA]: {
-                    tickMs:       30,    // 每次input事件直接30ms猛振
-                    clickMs:      50,    // 按下重击
-                    cooldown:     0,     // 零冷却！每个input事件都振！
-                    noBrake:      true,  // 不刹车！不调vibrate(0)！让振动自然叠加
-                    multiPulse:   false, // 不需要花式pattern，暴力连续单脉冲就是最强
-                    pulsePattern: null,
-                    clickPattern: null,
-                    label: '🔴 力大砖飞 (0916 Turbo 零冷却暴力)'
-                },
-                // 0916/1216/1010: 旗舰马达，同样不需要保护
-                [HapticTier.FLAGSHIP]: {
-                    tickMs:       25,    // 连续25ms脉冲
-                    clickMs:      40,    // 按下重击
-                    cooldown:     0,     // 零冷却
-                    noBrake:      true,  // 不刹车
-                    multiPulse:   false,
-                    pulsePattern: null,
-                    clickPattern: null,
-                    label: '🟠 强力模式 (0916/1216 零冷却)'
-                },
-                // 9595: 老马达响应偏慢，脉冲一长就进入持续共振变成"转子"
-                // 这类马达必须保留刹车+冷却，否则会糊成一坨嗡嗡声
-                [HapticTier.STANDARD]: {
-                    tickMs:       6,     // 极短！防止马达进入持续共振
-                    clickMs:      10,    // 点击也要短
-                    cooldown:     55,    // 长冷却：9595刹车慢，必须等停稳
-                    noBrake:      false, // 必须刹车
-                    multiPulse:   false,
-                    pulsePattern: null,
-                    clickPattern: null,
-                    label: '🟡 清脆模式 (9595 防转子)'
-                },
-                // 0809 及以下
-                [HapticTier.BUDGET]: {
-                    tickMs:       5,
-                    clickMs:      8,
-                    cooldown:     60,
-                    noBrake:      false,
-                    multiPulse:   false,
-                    pulsePattern: null,
-                    clickPattern: null,
-                    label: '🟢 轻触模式 (0809/通用)'
+            // ---- 异步检测真实设备型号 ----
+            async function detectDevice() {
+                // 方案1: Client Hints API (现代Chrome, 能拿到真实型号)
+                if (navigator.userAgentData?.getHighEntropyValues) {
+                    try {
+                        const h = await navigator.userAgentData.getHighEntropyValues(['model','platform','platformVersion']);
+                        const model = h.model || '';
+                        console.log(`[Haptic] ClientHints model: "${model}"`);
+                        const tier = classifyModel(model);
+                        if (tier) return { tier, model, src: 'ClientHints' };
+                        // ClientHints 返回了但型号不在库中，用品牌兜底
+                        const brandTier = classifyModel(navigator.userAgent);
+                        return { tier: brandTier || 'BUDGET', model: model || '(空)', src: 'ClientHints+Brand' };
+                    } catch(e) { console.warn('[Haptic] ClientHints err:', e); }
                 }
+                // 方案2: UA 解析 (HarmonyOS/WebView 等)
+                const ua = navigator.userAgent || '';
+                const m = ua.match(/;\s*([A-Za-z]{2,4}[\w-]+)\s*Build\//);
+                if (m) {
+                    const tier = classifyModel(m[1]);
+                    if (tier) return { tier, model: m[1], src: 'UA-Model' };
+                }
+                const tier = classifyModel(ua);
+                return { tier: tier || 'BUDGET', model: '(未识别)', src: 'UA-Brand' };
+            }
+
+            // ---- 触觉参数 ----
+            const PROFILES = {
+                ULTRA:    { tickMs: 30, clickMs: 50, cooldown: 0,  noBrake: true,  label: '🔴 力大砖飞 (0916T)' },
+                FLAGSHIP: { tickMs: 25, clickMs: 40, cooldown: 0,  noBrake: true,  label: '🟠 强力 (0916/1216)' },
+                STANDARD: { tickMs: 6,  clickMs: 10, cooldown: 55, noBrake: false, label: '🟡 清脆 (9595)' },
+                BUDGET:   { tickMs: 5,  clickMs: 8,  cooldown: 60, noBrake: false, label: '🟢 轻触 (通用)' },
             };
 
-            // 执行检测
-            const detectedTier = detectHapticTier();
-            const hapticProfile = HAPTIC_PROFILES[detectedTier];
-            console.log(`[Haptic Engine] 设备UA: ${navigator.userAgent}`);
-            console.log(`[Haptic Engine] 推断马达等级: ${detectedTier} → ${hapticProfile.label}`);
-
-            // ---- 第三层：自适应脉冲发射器 ----
-            // 核心发现：第一版震动最强是因为零保护连续轰炸
-            // 对现代旗舰马达(0916T/1216)，完全不需要刹车和冷却
-            // 只对老马达(9595/0809)保留保护机制
+            // ---- 脉冲发射器 ----
             function hapticTick(type) {
-                if (!canVibrate) return;
-                
-                // 对旗舰马达：跳过一切保护，每次调用都直接振！
+                if (!canVibrate || !hapticProfile) return;
                 if (hapticProfile.noBrake) {
-                    try {
-                        const ms = (type === 'click') ? hapticProfile.clickMs : hapticProfile.tickMs;
-                        navigator.vibrate(ms); // 直接振，不刹车，不冷却，暴力叠加
-                    } catch(e) {}
+                    try { navigator.vibrate((type === 'click') ? hapticProfile.clickMs : hapticProfile.tickMs); } catch(e) {}
                     return;
                 }
-                
-                // 对老马达：保留刹车+冷却保护
                 const now = Date.now();
                 if (now - lastTickTime < hapticProfile.cooldown) return;
                 lastTickTime = now;
                 try {
-                    navigator.vibrate(0); // 🛑 主动刹车（仅老马达需要）
-                    const ms = (type === 'click') ? hapticProfile.clickMs : hapticProfile.tickMs;
-                    navigator.vibrate(ms);
+                    navigator.vibrate(0);
+                    navigator.vibrate((type === 'click') ? hapticProfile.clickMs : hapticProfile.tickMs);
                 } catch(e) {}
             }
 
-            // ---- 绑定滑块事件 ----
+            // ---- 页面可见的检测结果 badge ----
+            function showBadge(info) {
+                const badge = document.createElement('span');
+                const c = { ULTRA:'bg-red-100/60 text-red-700', FLAGSHIP:'bg-orange-100/60 text-orange-700',
+                            STANDARD:'bg-yellow-100/60 text-yellow-700', BUDGET:'bg-green-100/60 text-green-700' };
+                badge.className = `text-xs font-mono px-2 py-0.5 rounded-full ml-2 ${c[info.tier]||c.BUDGET}`;
+                badge.textContent = `${hapticProfile.label} | ${info.model} [${info.src}]`;
+                badge.title = `型号: ${info.model}\n方式: ${info.src}\n等级: ${info.tier}`;
+                document.querySelector('h1')?.appendChild(badge);
+            }
+
+            // ---- 绑定滑块触觉事件 ----
             document.querySelectorAll('input[type="range"]').forEach(input => {
                 let lastValue = parseFloat(input.value);
-
-                // 按下/点击滑块：重击脉冲
                 input.addEventListener('click', () => hapticTick('click'));
-
-                // 拖动滑块：刻度脉冲
                 input.addEventListener('input', () => {
-                    const currentValue = parseFloat(input.value);
-                    if (currentValue !== lastValue) {
-                        hapticTick('tick');
-                        lastValue = currentValue;
-                    }
+                    const v = parseFloat(input.value);
+                    if (v !== lastValue) { hapticTick('tick'); lastValue = v; }
                     updateUI();
                 });
             });
@@ -721,7 +649,17 @@
             updateUI();
         }
 
-        window.onload = initCharts;
+        // ---- 启动 ----
+        window.onload = async function() {
+            initCharts();
+            // 异步检测设备并激活触觉系统
+            const info = await detectDevice();
+            hapticProfile = PROFILES[info.tier];
+            console.log(`[Haptic] ===== 检测完成 =====`);
+            console.log(`[Haptic] 型号: ${info.model} | 方式: ${info.src} | 等级: ${info.tier}`);
+            console.log(`[Haptic] → ${hapticProfile.label} | noBrake:${hapticProfile.noBrake} tickMs:${hapticProfile.tickMs}`);
+            showBadge(info);
+        };
     </script>
 </body>
 </html>
