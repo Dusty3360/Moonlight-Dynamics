@@ -619,44 +619,47 @@
             // ---- 第二层：各马达等级的触觉参数配置 ----
             const HAPTIC_PROFILES = {
                 // 0916 Turbo: 力大砖飞模式 🧱💨
-                // 马达素质拉满但Web层被系统阉割得几乎无感
-                // 策略：三连脉冲暴力叠加 + 极短冷却疯狂连发
+                // 真相：第一版震动最强是因为 零冷却+零刹车 → 马达被input事件连续轰炸
+                // 0916T 刹车 <1ms，完全不需要保护，直接回归暴力连续模式
                 [HapticTier.ULTRA]: {
-                    tickMs:       50,    // 单脉冲兜底(不会用到，走pattern)
-                    clickMs:      80,    // 单脉冲兜底
-                    cooldown:     15,    // 极短冷却：0916T刹车<1ms，不怕连发
-                    multiPulse:   true,
-                    pulsePattern: [30, 1, 25, 1, 20],  // 三连暴击：30→25→20ms递减冲击波
-                    clickPattern: [40, 1, 35, 1, 30],  // 点击三连重锤
-                    label: '🔴 力大砖飞 (0916 Turbo 暴力适配)'
+                    tickMs:       30,    // 每次input事件直接30ms猛振
+                    clickMs:      50,    // 按下重击
+                    cooldown:     0,     // 零冷却！每个input事件都振！
+                    noBrake:      true,  // 不刹车！不调vibrate(0)！让振动自然叠加
+                    multiPulse:   false, // 不需要花式pattern，暴力连续单脉冲就是最强
+                    pulsePattern: null,
+                    clickPattern: null,
+                    label: '🔴 力大砖飞 (0916 Turbo 零冷却暴力)'
                 },
-                // 0916/1216/1010: 旗舰马达，也需要补偿
-                // Mate 80 Pro 的 1216 马达素质极好，但 Web 层同样被压制
+                // 0916/1216/1010: 旗舰马达，同样不需要保护
                 [HapticTier.FLAGSHIP]: {
-                    tickMs:       35,
-                    clickMs:      55,
-                    cooldown:     20,    // 短冷却
-                    multiPulse:   true,  // 也上双脉冲
-                    pulsePattern: [25, 2, 20],    // 双脉冲连击
-                    clickPattern: [35, 2, 28],    // 点击双锤
-                    label: '🟠 强力模式 (0916/1216 强补偿)'
-                },
-                // 9595: 老马达响应偏慢，脉冲一长就进入持续共振变成"转子"
-                // 策略：极短锐脉冲(6ms) + 长冷却确保马达完全停转
-                [HapticTier.STANDARD]: {
-                    tickMs:       6,     // 极短！防止马达进入持续共振
-                    clickMs:      10,    // 点击也要短，干脆利落
-                    cooldown:     55,    // 长冷却：9595刹车慢，必须等停稳
+                    tickMs:       25,    // 连续25ms脉冲
+                    clickMs:      40,    // 按下重击
+                    cooldown:     0,     // 零冷却
+                    noBrake:      true,  // 不刹车
                     multiPulse:   false,
                     pulsePattern: null,
                     clickPattern: null,
-                    label: '🟡 清脆模式 (9595 防转子适配)'
+                    label: '🟠 强力模式 (0916/1216 零冷却)'
+                },
+                // 9595: 老马达响应偏慢，脉冲一长就进入持续共振变成"转子"
+                // 这类马达必须保留刹车+冷却，否则会糊成一坨嗡嗡声
+                [HapticTier.STANDARD]: {
+                    tickMs:       6,     // 极短！防止马达进入持续共振
+                    clickMs:      10,    // 点击也要短
+                    cooldown:     55,    // 长冷却：9595刹车慢，必须等停稳
+                    noBrake:      false, // 必须刹车
+                    multiPulse:   false,
+                    pulsePattern: null,
+                    clickPattern: null,
+                    label: '🟡 清脆模式 (9595 防转子)'
                 },
                 // 0809 及以下
                 [HapticTier.BUDGET]: {
                     tickMs:       5,
                     clickMs:      8,
                     cooldown:     60,
+                    noBrake:      false,
                     multiPulse:   false,
                     pulsePattern: null,
                     clickPattern: null,
@@ -671,30 +674,29 @@
             console.log(`[Haptic Engine] 推断马达等级: ${detectedTier} → ${hapticProfile.label}`);
 
             // ---- 第三层：自适应脉冲发射器 ----
+            // 核心发现：第一版震动最强是因为零保护连续轰炸
+            // 对现代旗舰马达(0916T/1216)，完全不需要刹车和冷却
+            // 只对老马达(9595/0809)保留保护机制
             function hapticTick(type) {
                 if (!canVibrate) return;
+                
+                // 对旗舰马达：跳过一切保护，每次调用都直接振！
+                if (hapticProfile.noBrake) {
+                    try {
+                        const ms = (type === 'click') ? hapticProfile.clickMs : hapticProfile.tickMs;
+                        navigator.vibrate(ms); // 直接振，不刹车，不冷却，暴力叠加
+                    } catch(e) {}
+                    return;
+                }
+                
+                // 对老马达：保留刹车+冷却保护
                 const now = Date.now();
                 if (now - lastTickTime < hapticProfile.cooldown) return;
                 lastTickTime = now;
-                
                 try {
-                    navigator.vibrate(0); // 🛑 主动刹车
-
-                    if (type === 'click') {
-                        // 点击反馈
-                        if (hapticProfile.multiPulse && hapticProfile.clickPattern) {
-                            navigator.vibrate(hapticProfile.clickPattern);
-                        } else {
-                            navigator.vibrate(hapticProfile.clickMs);
-                        }
-                    } else {
-                        // 拖动刻度反馈
-                        if (hapticProfile.multiPulse && hapticProfile.pulsePattern) {
-                            navigator.vibrate(hapticProfile.pulsePattern);
-                        } else {
-                            navigator.vibrate(hapticProfile.tickMs);
-                        }
-                    }
+                    navigator.vibrate(0); // 🛑 主动刹车（仅老马达需要）
+                    const ms = (type === 'click') ? hapticProfile.clickMs : hapticProfile.tickMs;
+                    navigator.vibrate(ms);
                 } catch(e) {}
             }
 
