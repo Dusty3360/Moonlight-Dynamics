@@ -618,49 +618,49 @@
 
             // ---- 第二层：各马达等级的触觉参数配置 ----
             const HAPTIC_PROFILES = {
-                // 0916 Turbo: 马达响应极快但Web层被系统压制
-                // 策略：超长脉冲 + 双脉冲叠加 + 短冷却(马达刹车快)
+                // 0916 Turbo: 力大砖飞模式 🧱💨
+                // 马达素质拉满但Web层被系统阉割得几乎无感
+                // 策略：三连脉冲暴力叠加 + 极短冷却疯狂连发
                 [HapticTier.ULTRA]: {
-                    tickMs:       25,    // 拖动刻度：25ms长脉冲(让振子充分起摆)
-                    clickMs:      40,    // 点击确认：40ms重击
-                    cooldown:     30,    // 冷却期短(0916刹车极快,<1ms启停)
-                    multiPulse:   true,  // 启用双脉冲叠加模式
-                    pulsePattern: [18, 3, 15], // 脉冲模式：18ms振→3ms停→15ms振(连续冲击)
-                    clickPattern: [25, 3, 20], // 点击模式：更重的双击
-                    label: '🔴 超强模式 (0916 Turbo 适配)'
+                    tickMs:       50,    // 单脉冲兜底(不会用到，走pattern)
+                    clickMs:      80,    // 单脉冲兜底
+                    cooldown:     15,    // 极短冷却：0916T刹车<1ms，不怕连发
+                    multiPulse:   true,
+                    pulsePattern: [30, 1, 25, 1, 20],  // 三连暴击：30→25→20ms递减冲击波
+                    clickPattern: [40, 1, 35, 1, 30],  // 点击三连重锤
+                    label: '🔴 力大砖飞 (0916 Turbo 暴力适配)'
                 },
-                // 0916/1216/1010: 旗舰马达，素质好
-                // 策略：中长脉冲，单脉冲即可有力
+                // 0916/1216/1010: 旗舰马达，也需要补偿
+                // Mate 80 Pro 的 1216 马达素质极好，但 Web 层同样被压制
                 [HapticTier.FLAGSHIP]: {
-                    tickMs:       18,    // 拖动：18ms
-                    clickMs:      30,    // 点击：30ms
-                    cooldown:     35,    // 稍短冷却
-                    multiPulse:   false, // 单脉冲足够
-                    pulsePattern: null,
-                    clickPattern: null,
-                    label: '🟠 旗舰模式 (0916/1216 适配)'
+                    tickMs:       35,
+                    clickMs:      55,
+                    cooldown:     20,    // 短冷却
+                    multiPulse:   true,  // 也上双脉冲
+                    pulsePattern: [25, 2, 20],    // 双脉冲连击
+                    clickPattern: [35, 2, 28],    // 点击双锤
+                    label: '🟠 强力模式 (0916/1216 强补偿)'
                 },
-                // 9595: 中端平衡马达
-                // 策略：原始的平衡参数
+                // 9595: 老马达响应偏慢，脉冲一长就进入持续共振变成"转子"
+                // 策略：极短锐脉冲(6ms) + 长冷却确保马达完全停转
                 [HapticTier.STANDARD]: {
-                    tickMs:       12,
-                    clickMs:      20,
-                    cooldown:     45,    // 标准冷却
+                    tickMs:       6,     // 极短！防止马达进入持续共振
+                    clickMs:      10,    // 点击也要短，干脆利落
+                    cooldown:     55,    // 长冷却：9595刹车慢，必须等停稳
                     multiPulse:   false,
                     pulsePattern: null,
                     clickPattern: null,
-                    label: '🟡 标准模式 (9595 适配)'
+                    label: '🟡 清脆模式 (9595 防转子适配)'
                 },
-                // 0809 及以下: 入门马达，振子小
-                // 策略：极短脉冲防止糊，较长冷却防止连振
+                // 0809 及以下
                 [HapticTier.BUDGET]: {
-                    tickMs:       8,
-                    clickMs:      15,
-                    cooldown:     50,
+                    tickMs:       5,
+                    clickMs:      8,
+                    cooldown:     60,
                     multiPulse:   false,
                     pulsePattern: null,
                     clickPattern: null,
-                    label: '🟢 轻柔模式 (0809/通用 适配)'
+                    label: '🟢 轻触模式 (0809/通用)'
                 }
             };
 
