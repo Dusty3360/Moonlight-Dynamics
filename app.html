@@ -647,19 +647,19 @@
             });
 
             updateUI();
+
+            // ---- 异步检测设备并激活触觉 (在 initCharts 闭包内) ----
+            (async function() {
+                const info = await detectDevice();
+                hapticProfile = PROFILES[info.tier];
+                console.log(`[Haptic] ===== 检测完成 =====`);
+                console.log(`[Haptic] 型号: ${info.model} | 方式: ${info.src} | 等级: ${info.tier}`);
+                console.log(`[Haptic] → ${hapticProfile.label} | noBrake:${hapticProfile.noBrake} tickMs:${hapticProfile.tickMs}`);
+                showBadge(info);
+            })();
         }
 
-        // ---- 启动 ----
-        window.onload = async function() {
-            initCharts();
-            // 异步检测设备并激活触觉系统
-            const info = await detectDevice();
-            hapticProfile = PROFILES[info.tier];
-            console.log(`[Haptic] ===== 检测完成 =====`);
-            console.log(`[Haptic] 型号: ${info.model} | 方式: ${info.src} | 等级: ${info.tier}`);
-            console.log(`[Haptic] → ${hapticProfile.label} | noBrake:${hapticProfile.noBrake} tickMs:${hapticProfile.tickMs}`);
-            showBadge(info);
-        };
+        window.onload = initCharts;
     </script>
 </body>
 </html>
