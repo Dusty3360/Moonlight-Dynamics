@@ -12,261 +12,394 @@
         window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
    <style>
-    /* 页面基础科技感渐变背景 */
+    /* ========================================= */
+    /*  暗色基底 — 纯黑，光来自鼠标             */
+    /* ========================================= */
+    :root {
+        --mx: 50vw;
+        --my: 50vh;
+    }
     .glass-bg {
-        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 40%, #dee2e6 100%);
+        background: #0a0a0c;
         position: relative;
         overflow-x: hidden;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
-    .glass-bg::before {
-        content: ""; position: fixed; top: -10%; left: -10%; width: 50vw; height: 50vw;
-        background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(0,0,0,0) 70%);
-        z-index: 0; pointer-events: none;
-    }
-    .glass-bg::after {
-        content: ""; position: fixed; bottom: -10%; right: -10%; width: 50vw; height: 50vw;
-        background: radial-gradient(circle, rgba(239,68,68,0.1) 0%, rgba(0,0,0,0) 70%);
-        z-index: 0; pointer-events: none;
-    }
-    
-    /* 容器的流体玻璃样式 */
+
+    /* ========================================= */
+    /*  Liquid Glass — 暗色 + Reveal Highlight   */
+    /* ========================================= */
     .liquid-glass {
-        background: rgba(255, 255, 255, 0.45);
-        backdrop-filter: blur(16px) saturate(120%);
-        -webkit-backdrop-filter: blur(16px) saturate(120%);
-        border: 1px solid rgba(255, 255, 255, 0.6);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+        position: relative;
+        background: rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(20px) saturate(120%);
+        -webkit-backdrop-filter: blur(20px) saturate(120%);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+        transition: box-shadow 0.35s ease, transform 0.25s ease, border-color 0.3s ease;
+        overflow: hidden;
     }
+    /* Fluent Reveal: 鼠标驱动的面板表面高光 */
+    .liquid-glass::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+            500px circle at var(--mx) var(--my),
+            rgba(255, 255, 255, 0.05),
+            transparent 40%
+        );
+        pointer-events: none;
+        z-index: 0;
+    }
+    .liquid-glass:hover {
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        transform: translateY(-1px);
+    }
+    /* 确保内容在 ::before 之上 */
+    .liquid-glass > * {
+        position: relative;
+        z-index: 1;
+    }
+
     .liquid-glass-dark {
-        background: rgba(31, 41, 55, 0.75);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px) saturate(110%);
+        -webkit-backdrop-filter: blur(16px) saturate(110%);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+        transition: box-shadow 0.35s ease, transform 0.25s ease, border-color 0.3s ease;
+        overflow: hidden;
+    }
+    .liquid-glass-dark::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+            500px circle at var(--mx) var(--my),
+            rgba(255, 255, 255, 0.04),
+            transparent 40%
+        );
+        pointer-events: none;
+        z-index: 0;
+    }
+    .liquid-glass-dark > * {
+        position: relative;
+        z-index: 1;
+    }
+    .liquid-glass-dark:hover {
+        border-color: rgba(255, 255, 255, 0.10);
+        transform: translateY(-1px);
     }
 
     /* ========================================= */
-    /* 💧 核心：原生滑块的 Liquid Glass 水滴化重构 */
+    /*  Liquid Glass 椭圆胶囊滑块 (暗色版)       */
     /* ========================================= */
+
+    /* --- 轨道：暗色内凹沟槽 --- */
     input[type="range"] {
-        -webkit-appearance: none; /* 扒掉原生皮肤 */
+        -webkit-appearance: none;
+        appearance: none;
         width: 100%;
-        height: 8px; /* 轨道厚度 */
-        border-radius: 4px;
-        background: #e5e7eb; /* 默认轨道灰色 */
+        height: 6px;
+        border-radius: 3px;
+        background: #1e1e24;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
         outline: none;
-        transition: background 0.1s ease;
+        transition: background 0.15s ease;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+        height: 6px;
+        border-radius: 3px;
     }
 
-    /* 针对自身条件（左侧）滑块：蓝色高亮填充 */
-    .blue-slider input[type="range"] {
-        /* JS 会实时动态覆盖这个背景，形成进度条效果 */
-    }
-
-    /* 针对游戏属性（右侧）滑块：红色高亮填充 */
-    .red-slider input[type="range"] {
-        /* JS 会实时动态覆盖这个背景，形成进度条效果 */
-    }
-
-    /* 🌟 水滴滑块 Thumb 核心设计 (复刻图里那个胖胖的玻璃胶囊) */
+    /* --- 椭圆胶囊 Thumb：Apple Liquid Glass --- */
     input[type="range"]::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
-        width: 44px;         /* 像水滴一样的椭圆形 */
+        width: 44px;
         height: 26px;
-        border-radius: 13px; /* 胶囊圆角 */
-        
-        /* 核心玻璃折射与高光 */
-        background: rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(6px);         /* 模拟折射背景轨道 */
-        -webkit-backdrop-filter: blur(6px);
-        border: 1.5px solid rgba(255, 255, 255, 0.9);
-        
-        /* 疯狂的 box-shadow 捏出 3D 水滴质感 */
-        box-shadow: 
-            inset 0 3px 6px rgba(255, 255, 255, 0.8),   /* 顶部内高光，像水面的反光 */
-            inset 0 -2px 4px rgba(0, 0, 0, 0.08),       /* 底部内暗角，做出立体厚度 */
-            0 4px 10px rgba(0, 0, 0, 0.15),             /* 投射在轨道上的阴影 */
-            0 8px 20px rgba(59, 130, 246, 0.1);         /* 淡淡的蓝色光晕溢出 */
-            
+        border-radius: 13px;
+        margin-top: -10px;
+
+        /* 暗色底上的玻璃折射 */
+        background: linear-gradient(
+            170deg,
+            rgba(255, 255, 255, 0.25) 0%,
+            rgba(255, 255, 255, 0.10) 50%,
+            rgba(255, 255, 255, 0.04) 100%
+        );
+        backdrop-filter: blur(8px) saturate(130%);
+        -webkit-backdrop-filter: blur(8px) saturate(130%);
+        border: 1px solid rgba(255, 255, 255, 0.30);
+
+        /* 三层光影 */
+        box-shadow:
+            inset 0 3px 6px rgba(255, 255, 255, 0.35),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.15),
+            0 4px 12px rgba(0, 0, 0, 0.4),
+            0 0 16px rgba(255, 255, 255, 0.04);
+
         cursor: grab;
-        /* 🚀 物理引擎：极度 Q弹的贝塞尔曲线 (模拟果冻形变) */
-        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+        transition:
+            transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+            box-shadow 0.25s ease,
+            background 0.2s ease;
     }
 
-    /* Hover 悬停：水滴微微放大并亮起 */
+    /* Hover：微放大 + 边缘亮起 */
     input[type="range"]::-webkit-slider-thumb:hover {
-        transform: scale(1.15); /* 放大 15% */
-        background: rgba(255, 255, 255, 0.5);
-        box-shadow: 
-            inset 0 3px 6px rgba(255, 255, 255, 0.9),
-            inset 0 -2px 4px rgba(0, 0, 0, 0.05),
-            0 6px 14px rgba(0, 0, 0, 0.2),
-            0 8px 25px rgba(59, 130, 246, 0.25);
+        transform: scale(1.12);
+        background: linear-gradient(
+            170deg,
+            rgba(255, 255, 255, 0.35) 0%,
+            rgba(255, 255, 255, 0.15) 50%,
+            rgba(255, 255, 255, 0.06) 100%
+        );
+        border-color: rgba(255, 255, 255, 0.45);
+        box-shadow:
+            inset 0 3px 6px rgba(255, 255, 255, 0.45),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.12),
+            0 6px 16px rgba(0, 0, 0, 0.5),
+            0 0 24px rgba(255, 255, 255, 0.08);
     }
 
-    /* Active 拖拽中：水滴被手指按扁，变得紧致 */
+    /* Active：横向挤压果冻形变 */
     input[type="range"]::-webkit-slider-thumb:active {
         cursor: grabbing;
-        transform: scale(0.92); /* 缩小并按扁 */
-        backdrop-filter: blur(2px);
-        background: rgba(255, 255, 255, 0.7);
-        box-shadow: 
-            inset 0 2px 4px rgba(255, 255, 255, 0.9),
-            inset 0 -1px 2px rgba(0, 0, 0, 0.1),
-            0 2px 5px rgba(0, 0, 0, 0.1);
+        transform: scaleX(1.12) scaleY(0.88);
+        background: linear-gradient(
+            170deg,
+            rgba(255, 255, 255, 0.40) 0%,
+            rgba(255, 255, 255, 0.18) 50%,
+            rgba(255, 255, 255, 0.08) 100%
+        );
+        box-shadow:
+            inset 0 2px 4px rgba(255, 255, 255, 0.50),
+            inset 0 -1px 3px rgba(0, 0, 0, 0.2),
+            0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    /* --- Firefox 兼容 --- */
+    input[type="range"]::-moz-range-track {
+        height: 6px;
+        border-radius: 3px;
+        background: #1e1e24;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+        border: none;
+    }
+    input[type="range"]::-moz-range-thumb {
+        width: 44px;
+        height: 26px;
+        border-radius: 13px;
+        background: linear-gradient(
+            170deg,
+            rgba(255, 255, 255, 0.25) 0%,
+            rgba(255, 255, 255, 0.10) 50%,
+            rgba(255, 255, 255, 0.04) 100%
+        );
+        border: 1px solid rgba(255, 255, 255, 0.30);
+        box-shadow:
+            inset 0 3px 6px rgba(255, 255, 255, 0.35),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.15),
+            0 4px 12px rgba(0, 0, 0, 0.4);
+        cursor: grab;
+        transition:
+            transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+            box-shadow 0.25s ease;
+    }
+    input[type="range"]::-moz-range-thumb:hover {
+        transform: scale(1.12);
+        border-color: rgba(255, 255, 255, 0.45);
+    }
+    input[type="range"]::-moz-range-thumb:active {
+        cursor: grabbing;
+        transform: scaleX(1.12) scaleY(0.88);
+    }
+
+    /* ========================================= */
+    /*  微动效                                    */
+    /* ========================================= */
+    @keyframes val-bounce {
+        0%   { transform: scale(1); }
+        40%  { transform: scale(1.08); }
+        100% { transform: scale(1); }
+    }
+    .val-tick {
+        animation: val-bounce 0.25s ease-out;
+    }
+
+    @keyframes diag-fade-in {
+        from { opacity: 0.6; transform: translateY(4px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .diag-enter {
+        animation: diag-fade-in 0.3s ease-out;
+    }
+
+    /* 诊断框左侧色标 */
+    .diag-bar {
+        border-left: 3px solid currentColor;
+        padding-left: 16px;
+        text-align: left;
     }
 </style>
 </head>
-<body class="glass-bg min-h-screen p-4 md:p-8 font-sans text-gray-800">
+<body class="glass-bg min-h-screen p-4 md:p-8 font-sans text-gray-200">
 
     <div class="max-w-7xl mx-auto space-y-6 relative z-10">
         <!-- 顶部 Header -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 liquid-glass p-5 rounded-2xl">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Moonlight Dynamics <span class="text-xs font-normal text-blue-600 bg-blue-100/60 px-2 py-0.5 rounded-full ml-1">v3.2 Glass FE</span></h1>
+                <h1 class="text-2xl font-semibold text-gray-100 tracking-tight">Moonlight Dynamics <span class="text-xs font-normal text-gray-500 bg-white/8 px-2 py-0.5 rounded-full ml-1">v3.2</span></h1>
                 <p class="text-xs text-gray-500 mt-1">A psychological dynamics model exploring fantasy frequency and emotional stability.</p>
             </div>
-            <div class="bg-white/60 px-3 py-2 rounded-xl text-xs font-mono text-gray-700 border border-white/50">
+            <div class="bg-white/6 px-3 py-2 rounded-xl text-xs font-mono text-gray-400 border border-white/8">
                 核心基准: $K = \frac{\max(F_{eff} \cdot B - E, 0) \cdot S^\alpha}{C}$
             </div>
         </div>
 
-        <!-- AI 动态诊断结论框 -->
-        <div id="diagnostic-box" class="w-full text-center py-4 px-6 rounded-2xl font-bold text-lg shadow-sm transition-all duration-300 liquid-glass border-amber-200/60 text-amber-900">
+        <!-- 动态诊断结论框 -->
+        <div id="diagnostic-box" class="w-full py-4 px-6 rounded-2xl font-semibold text-base shadow-sm transition-all duration-300 liquid-glass text-gray-400 diag-enter diag-bar">
             正在初始化动力学控制台...
         </div>
 
         <!-- 图表展示区 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="liquid-glass p-5 rounded-2xl">
-                <h3 class="text-sm font-bold text-gray-700 mb-3 text-center tracking-wide">空闲状态下的幻想频率 (F_total)</h3>
+                <h3 class="text-sm font-medium text-gray-500 mb-3 text-center tracking-wide">空闲状态下的幻想频率 (F_total)</h3>
                 <div class="h-64"><canvas id="chart-fantasy"></canvas></div>
             </div>
             <div class="liquid-glass p-5 rounded-2xl">
-                <h3 class="text-sm font-bold text-gray-700 mb-3 text-center tracking-wide">白月光终极杀伤力 (K)</h3>
+                <h3 class="text-sm font-medium text-gray-500 mb-3 text-center tracking-wide">白月光终极杀伤力 (K)</h3>
                 <div class="h-64"><canvas id="chart-kill"></canvas></div>
             </div>
         </div>
 
         <!-- 标定手册与 K 值阈值说明 (流体夜空玻璃风格) -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="liquid-glass-dark text-gray-300 p-5 rounded-2xl text-xs space-y-1.5 leading-relaxed shadow-lg">
-                <div class="font-bold text-white text-sm mb-1 flex items-center gap-1">🎮 游戏参数标定参考（清醒时间 16h）：</div>
-                <p>• <b>时间吞噬度 α</b>：欧卡2(跑长途)=1.2 (极杀时间) ； 休闲游戏=0.4</p>
-                <p>• <b>大脑占据度 β</b>：神力科莎(ACC)抠细节 / 尖塔(算牌)=1.2 ； 挂机放置=0.2</p>
-                <p>• <b>即时爽快度 β_R</b>：赛博朋克2077(秒怪)=1.0 ； 硬核受苦=-0.2</p>
+            <div class="liquid-glass-dark text-gray-400 p-5 rounded-2xl text-xs space-y-1.5 leading-relaxed">
+                <div class="font-semibold text-gray-300 text-sm mb-1">游戏参数标定参考（清醒时间 16h）</div>
+                <p>• <b class="text-gray-300">时间吞噬度 α</b>：欧卡2(跑长途)=1.2 (极杀时间) ； 休闲游戏=0.4</p>
+                <p>• <b class="text-gray-300">大脑占据度 β</b>：神力科莎(ACC)抠细节 / 尖塔(算牌)=1.2 ； 挂机放置=0.2</p>
+                <p>• <b class="text-gray-300">即时爽快度 β_R</b>：赛博朋克2077(秒怪)=1.0 ； 硬核受苦=-0.2</p>
             </div>
-            <div class="bg-indigo-950/70 backdrop-blur-md border border-indigo-500/20 text-indigo-200 p-5 rounded-2xl text-xs space-y-1.5 leading-relaxed shadow-lg">
-                <div class="font-bold text-white text-sm mb-1">📊 杀伤力 K 战损等级阈值：</div>
-                <p>• <span class="text-green-400 font-bold">K = 0</span>：<b>绝对防御 (No Pain)</b>，心无旁骛，免疫伤害。</p>
-                <p>• <span class="text-blue-300 font-bold">0 < K ≤ 0.3</span>：<b>轻微波动 (正常状态)</b>，偶尔闪念，不影响现实。</p>
-                <p>• <span class="text-orange-300 font-bold">0.3 < K ≤ 0.8</span>：<b>精神内耗 (危险边缘)</b>，注意力涣散，操作变形。</p>
-                <p>• <span class="text-red-400 font-bold">K > 0.8</span>：<b>彻底破防 (理智崩塌)</b>，情绪失控，被回忆吞噬。</p>
+            <div class="liquid-glass-dark text-gray-400 p-5 rounded-2xl text-xs space-y-1.5 leading-relaxed">
+                <div class="font-semibold text-gray-300 text-sm mb-1">杀伤力 K 战损等级阈值</div>
+                <p>• <span class="text-emerald-500 font-semibold">K = 0</span>：<b class="text-gray-300">绝对防御</b>，心无旁骛，免疫伤害。</p>
+                <p>• <span class="text-sky-400 font-semibold">0 < K ≤ 0.3</span>：<b class="text-gray-300">轻微波动</b>，偶尔闪念，不影响现实。</p>
+                <p>• <span class="text-amber-400 font-semibold">0.3 < K ≤ 0.8</span>：<b class="text-gray-300">精神内耗</b>，注意力涣散，操作变形。</p>
+                <p>• <span class="text-red-400 font-semibold">K > 0.8</span>：<b class="text-gray-300">彻底破防</b>，情绪失控，被回忆吞噬。</p>
             </div>
         </div>
 
         <!-- 滑块控制面板 -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- 左侧：自身现实条件 -->
-            <div class="bg-blue-50/40 backdrop-blur-md border border-blue-200/40 p-5 rounded-2xl space-y-5 shadow-xs">
-                <h3 class="font-bold text-blue-900 border-b border-blue-200/50 pb-2 flex justify-between items-center">
-                    <span>👤 自身现实条件</span>
-                    <span class="text-xs text-blue-600 font-normal bg-blue-100/50 px-2 py-0.5 rounded-md">客观环境与心理基底</span>
+            <div class="liquid-glass p-5 rounded-2xl space-y-5">
+                <h3 class="font-semibold text-gray-200 border-b border-white/8 pb-2 flex justify-between items-center">
+                    <span>自身条件</span>
+                    <span class="text-xs text-gray-500 font-normal bg-white/6 px-2 py-0.5 rounded-md">客观环境与心理基底</span>
                 </h3>
                 
                 <div class="space-y-1">
-                    <div class="flex justify-between items-center text-xs font-medium text-gray-700">
+                    <div class="flex justify-between items-center text-xs font-medium text-gray-400">
                         <div class="flex items-center gap-1">
-                            <button onclick="openModal('L')" class="text-blue-500 hover:text-blue-700 cursor-pointer text-sm">ℹ️</button>
+                            <button onclick="openModal('L')" class="text-gray-600 hover:text-gray-400 cursor-pointer text-sm">i</button>
                             <label>正事时间比例 (L)</label>
                         </div>
-                        <span id="val-L" class="font-mono bg-blue-100/70 px-1.5 rounded text-blue-800">60%</span>
+                        <span id="val-L" class="font-mono bg-white/10 px-1.5 rounded text-gray-300">60%</span>
                     </div>
                     <input type="range" id="slider-L" min="0" max="0.9" step="0.05" value="0.6" class="w-full h-2 bg-gray-200/80 rounded-lg appearance-none cursor-pointer">
                 </div>
 
                 <div class="space-y-1">
-                    <div class="flex justify-between items-center text-xs font-medium text-gray-700">
+                    <div class="flex justify-between items-center text-xs font-medium text-gray-400">
                         <div class="flex items-center gap-1">
-                            <button onclick="openModal('H0')" class="text-blue-500 hover:text-blue-700 cursor-pointer text-sm">ℹ️</button>
+                            <button onclick="openModal('H0')" class="text-gray-600 hover:text-gray-400 cursor-pointer text-sm">i</button>
                             <label>想她本能频率 (H0)</label>
                         </div>
-                        <span id="val-H0" class="font-mono bg-blue-100/70 px-1.5 rounded text-blue-800">0.50 级</span>
+                        <span id="val-H0" class="font-mono bg-white/10 px-1.5 rounded text-gray-300">0.50 级</span>
                     </div>
                     <input type="range" id="slider-H0" min="0" max="1" step="0.05" value="0.5" class="w-full h-2 bg-gray-200/80 rounded-lg appearance-none cursor-pointer">
                 </div>
 
                 <div class="space-y-1">
-                    <div class="flex justify-between items-center text-xs font-medium text-gray-700">
+                    <div class="flex justify-between items-center text-xs font-medium text-gray-400">
                         <div class="flex items-center gap-1">
-                            <button onclick="openModal('C0')" class="text-blue-500 hover:text-blue-700 cursor-pointer text-sm">ℹ️</button>
+                            <button onclick="openModal('C0')" class="text-gray-600 hover:text-gray-400 cursor-pointer text-sm">i</button>
                             <label>你的理智基础 (C0)</label>
                         </div>
-                        <span id="val-C0" class="font-mono bg-blue-100/70 px-1.5 rounded text-blue-800">0.80 级</span>
+                        <span id="val-C0" class="font-mono bg-white/10 px-1.5 rounded text-gray-300">0.80 级</span>
                     </div>
                     <input type="range" id="slider-C0" min="0.1" max="1" step="0.05" value="0.8" class="w-full h-2 bg-gray-200/80 rounded-lg appearance-none cursor-pointer">
                 </div>
 
                 <div class="space-y-1">
-                    <div class="flex justify-between items-center text-xs font-medium text-gray-700">
+                    <div class="flex justify-between items-center text-xs font-medium text-gray-400">
                         <div class="flex items-center gap-1">
-                            <button onclick="openModal('B')" class="text-blue-500 hover:text-blue-700 cursor-pointer text-sm">ℹ️</button>
+                            <button onclick="openModal('B')" class="text-gray-600 hover:text-gray-400 cursor-pointer text-sm">i</button>
                             <label>白月光固有杀伤力 (B)</label>
                         </div>
-                        <span id="val-B" class="font-mono bg-blue-100/70 px-1.5 rounded text-blue-800">1.20 级</span>
+                        <span id="val-B" class="font-mono bg-white/10 px-1.5 rounded text-gray-300">1.20 级</span>
                     </div>
                     <input type="range" id="slider-B" min="0.5" max="3" step="0.1" value="1.2" class="w-full h-2 bg-gray-200/80 rounded-lg appearance-none cursor-pointer">
                 </div>
             </div>
 
             <!-- 右侧：游戏属性配置 -->
-            <div class="bg-red-50/40 backdrop-blur-md border border-red-200/40 p-5 rounded-2xl space-y-5 shadow-xs game-slider">
-                <h3 class="font-bold text-red-900 border-b border-red-200/50 pb-2 flex justify-between items-center">
-                    <span>🎮 游戏属性配置</span>
-                    <span class="text-xs text-red-600 font-normal bg-red-100/50 px-2 py-0.5 rounded-md">外部干预项参数</span>
+            <div class="liquid-glass p-5 rounded-2xl space-y-5 game-slider">
+                <h3 class="font-semibold text-gray-200 border-b border-white/8 pb-2 flex justify-between items-center">
+                    <span>游戏属性</span>
+                    <span class="text-xs text-gray-500 font-normal bg-white/6 px-2 py-0.5 rounded-md">外部干预项参数</span>
                 </h3>
 
                 <div class="space-y-1">
-                    <div class="flex justify-between items-center text-xs font-medium text-gray-700">
+                    <div class="flex justify-between items-center text-xs font-medium text-gray-400">
                         <div class="flex items-center gap-1">
-                            <button onclick="openModal('alpha')" class="text-red-500 hover:text-red-700 cursor-pointer text-sm">ℹ️</button>
+                            <button onclick="openModal('alpha')" class="text-gray-600 hover:text-gray-400 cursor-pointer text-sm">i</button>
                             <label>时间吞噬度 (α)</label>
                         </div>
-                        <span id="val-alpha" class="font-mono bg-red-100/70 px-1.5 rounded text-red-800">0.80 级</span>
+                        <span id="val-alpha" class="font-mono bg-white/10 px-1.5 rounded text-gray-300">0.80 级</span>
                     </div>
                     <input type="range" id="slider-alpha" min="0.1" max="1.5" step="0.1" value="0.8" class="w-full h-2 bg-gray-200/80 rounded-lg appearance-none cursor-pointer">
                 </div>
 
                 <div class="space-y-1">
-                    <div class="flex justify-between items-center text-xs font-medium text-gray-700">
+                    <div class="flex justify-between items-center text-xs font-medium text-gray-400">
                         <div class="flex items-center gap-1">
-                            <button onclick="openModal('beta')" class="text-red-500 hover:text-red-700 cursor-pointer text-sm">ℹ️</button>
+                            <button onclick="openModal('beta')" class="text-gray-600 hover:text-gray-400 cursor-pointer text-sm">i</button>
                             <label>大脑占据度 (β)</label>
                         </div>
-                        <span id="val-beta" class="font-mono bg-red-100/70 px-1.5 rounded text-red-800">0.70 级</span>
+                        <span id="val-beta" class="font-mono bg-white/10 px-1.5 rounded text-gray-300">0.70 级</span>
                     </div>
                     <input type="range" id="slider-beta" min="0.1" max="1.5" step="0.1" value="0.7" class="w-full h-2 bg-gray-200/80 rounded-lg appearance-none cursor-pointer">
                 </div>
 
                 <div class="space-y-1">
-                    <div class="flex justify-between items-center text-xs font-medium text-gray-700">
+                    <div class="flex justify-between items-center text-xs font-medium text-gray-400">
                         <div class="flex items-center gap-1">
-                            <button onclick="openModal('gamma')" class="text-red-500 hover:text-red-700 cursor-pointer text-sm">ℹ️</button>
+                            <button onclick="openModal('gamma')" class="text-gray-600 hover:text-gray-400 cursor-pointer text-sm">i</button>
                             <label>理智腐蚀度 (γ)</label>
                         </div>
-                        <span id="val-gamma" class="font-mono bg-red-100/70 px-1.5 rounded text-red-800">0.30 级</span>
+                        <span id="val-gamma" class="font-mono bg-white/10 px-1.5 rounded text-gray-300">0.30 级</span>
                     </div>
                     <input type="range" id="slider-gamma" min="0" max="1" step="0.1" value="0.3" class="w-full h-2 bg-gray-200/80 rounded-lg appearance-none cursor-pointer">
                 </div>
 
                 <div class="space-y-1">
-                    <div class="flex justify-between items-center text-xs font-medium text-gray-700">
+                    <div class="flex justify-between items-center text-xs font-medium text-gray-400">
                         <div class="flex items-center gap-1">
-                            <button onclick="openModal('betaR')" class="text-red-500 hover:text-red-700 cursor-pointer text-sm">ℹ️</button>
+                            <button onclick="openModal('betaR')" class="text-gray-600 hover:text-gray-400 cursor-pointer text-sm">i</button>
                             <label>即时爽快度 (β_R)</label>
                         </div>
-                        <span id="val-betaR" class="font-mono bg-red-100/70 px-1.5 rounded text-red-800">0.50 级</span>
+                        <span id="val-betaR" class="font-mono bg-white/10 px-1.5 rounded text-gray-300">0.50 级</span>
                     </div>
                     <input type="range" id="slider-betaR" min="-0.5" max="1.5" step="0.1" value="0.5" class="w-full h-2 bg-gray-200/80 rounded-lg appearance-none cursor-pointer">
                 </div>
@@ -275,14 +408,14 @@
     </div>
 
     <!-- ================= 核心高斯模糊详情弹窗 (Modal) ================= -->
-    <div id="info-modal" class="hidden fixed inset-0 bg-black/30 backdrop-blur-xl z-50 flex items-center justify-center p-4 transition-all duration-300">
-        <div class="bg-white/80 border border-white/40 max-w-lg w-full rounded-2xl p-6 shadow-2xl space-y-4 relative">
-            <h4 id="modal-title" class="text-lg font-bold text-gray-950 flex items-center gap-2">变量详细量化说明</h4>
-            <div id="modal-content" class="text-sm text-gray-700 space-y-3 font-sans leading-relaxed">
+    <div id="info-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-xl z-50 flex items-center justify-center p-4 transition-all duration-300">
+        <div class="bg-gray-900/90 border border-white/10 max-w-lg w-full rounded-2xl p-6 shadow-2xl space-y-4 relative backdrop-blur-2xl">
+            <h4 id="modal-title" class="text-lg font-semibold text-gray-100 flex items-center gap-2">变量详细量化说明</h4>
+            <div id="modal-content" class="text-sm text-gray-400 space-y-3 font-sans leading-relaxed">
                 <!-- 动态填充 -->
             </div>
             <div class="flex justify-end pt-2">
-                <button onclick="closeModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl cursor-pointer shadow-xs transition-colors">我知道了</button>
+                <button onclick="closeModal()" class="px-4 py-2 bg-white/10 hover:bg-white/15 text-gray-200 font-medium text-sm rounded-xl cursor-pointer border border-white/10 transition-colors">我知道了</button>
             </div>
         </div>
     </div>
@@ -421,19 +554,17 @@
         }
 
        function updateUI() {
-            // ----- 新增：给水滴滑块注入动态的轨道底色 -----
+            // ----- 给水滴滑块注入动态的轨道底色 -----
             document.querySelectorAll('input[type="range"]').forEach(input => {
                 const min = parseFloat(input.min) || 0;
                 const max = parseFloat(input.max) || 1;
                 const val = parseFloat(input.value);
                 const percentage = ((val - min) / (max - min)) * 100;
                 
-                // 左侧你的属性用蓝色，右侧游戏属性用红色
                 const isGameSlider = input.id.includes('alpha') || input.id.includes('beta') || input.id.includes('gamma');
-                const fillColor = isGameSlider ? '#ef4444' : '#3b82f6'; 
-                const emptyColor = '#e5e7eb';
+                const fillColor = isGameSlider ? '#f87171' : '#60a5fa';
+                const emptyColor = '#dfe2e8';
                 
-                // 用 CSS 渐变实时绘制滑块的进度底色
                 input.style.background = `linear-gradient(to right, ${fillColor} ${percentage}%, ${emptyColor} ${percentage}%)`;
             });
             // ----------------------------------------------
@@ -450,6 +581,13 @@
             txtGamma.innerText = parseFloat(elGamma.value).toFixed(2) + ' 级';
             txtBetaR.innerText = parseFloat(elBetaR.value).toFixed(2) + ' 级';
 
+            // 值 badge 弹跳微动效
+            [txtL, txtH0, txtC0, txtB, txtAlpha, txtBeta, txtGamma, txtBetaR].forEach(el => {
+                el.classList.remove('val-tick');
+                void el.offsetWidth; // force reflow
+                el.classList.add('val-tick');
+            });
+
             const data = calculateSystem();
             const free_hours = (1.0 - data.L) * 16.0;
             const game_hours = data.best_R * 16.0;
@@ -458,27 +596,27 @@
             const minLabel = getKLabel(data.minK);
 
             if (game_hours >= free_hours - 0.5 && free_hours > 0) {
-                diagBox.innerText = `🚨 现实逃避：每天剩 ${free_hours.toFixed(1)}h，全拿来打游戏麻痹自己。已被现实破防！【当前: ${minLabel} K=${data.minK.toFixed(2)}】`;
-                diagBox.className = "w-full text-center py-4 px-6 rounded-2xl font-bold text-lg shadow-sm transition-all duration-300 liquid-glass bg-red-100/50 border-red-300 text-red-900";
+                diagBox.innerText = `现实逃避：每天剩 ${free_hours.toFixed(1)}h，全拿来打游戏麻痹自己。已被现实破防！【当前: ${minLabel} K=${data.minK.toFixed(2)}】`;
+                diagBox.className = "w-full py-4 px-6 rounded-2xl font-semibold text-base shadow-sm transition-all duration-300 liquid-glass border-l-4 border-rose-500/70 text-rose-300 diag-enter diag-bar";
             } else if (game_hours <= 0.1) {
                 if (data.baseK <= 0.3) {
-                    diagBox.innerText = `🛡️ 状态极佳：保持现在的充实感！无需游戏干预，她也无法破防。【当前: ${baseLabel} K=${data.baseK.toFixed(2)}】`;
-                    diagBox.className = "w-full text-center py-4 px-6 rounded-2xl font-bold text-lg shadow-sm transition-all duration-300 liquid-glass bg-green-100/50 border-green-300 text-green-900";
+                    diagBox.innerText = `状态极佳：保持现在的充实感！无需游戏干预，她也无法破防。【当前: ${baseLabel} K=${data.baseK.toFixed(2)}】`;
+                    diagBox.className = "w-full py-4 px-6 rounded-2xl font-semibold text-base shadow-sm transition-all duration-300 liquid-glass border-l-4 border-emerald-500/70 text-emerald-300 diag-enter diag-bar";
                 } else {
-                    diagBox.innerText = `⚠️ 绝对禁止！该游戏只会加速理智崩塌！当前唯一解是【禁游去干正事】。【当前不玩已是: ${baseLabel} K=${data.baseK.toFixed(2)}】`;
-                    diagBox.className = "w-full text-center py-4 px-6 rounded-2xl font-bold text-lg shadow-xs transition-all duration-300 liquid-glass bg-red-100/50 border-red-300 text-red-900";
+                    diagBox.innerText = `绝对禁止！该游戏只会加速理智崩塌！当前唯一解是【禁游去干正事】。【当前不玩已是: ${baseLabel} K=${data.baseK.toFixed(2)}】`;
+                    diagBox.className = "w-full py-4 px-6 rounded-2xl font-semibold text-base shadow-xs transition-all duration-300 liquid-glass border-l-4 border-rose-500/70 text-rose-300 diag-enter diag-bar";
                 }
             } else if (data.minK < data.baseK) {
                 if (data.minK === 0) {
-                    diagBox.innerText = `✅ 完美转移：干完正事后，每天打 ${game_hours.toFixed(1)}h 游戏，可将杀伤力降至 0。【达成: ${minLabel}】`;
-                    diagBox.className = "w-full text-center py-4 px-6 rounded-2xl font-bold text-lg shadow-sm transition-all duration-300 liquid-glass bg-blue-100/50 border-blue-300 text-blue-900";
+                    diagBox.innerText = `完美转移：干完正事后，每天打 ${game_hours.toFixed(1)}h 游戏，可将杀伤力降至 0。【达成: ${minLabel}】`;
+                    diagBox.className = "w-full py-4 px-6 rounded-2xl font-semibold text-base shadow-sm transition-all duration-300 liquid-glass border-l-4 border-sky-500/70 text-sky-300 diag-enter diag-bar";
                 } else {
-                    diagBox.innerText = `💡 战损压制：每天打 ${game_hours.toFixed(1)}h 游戏，能将杀伤力从 ${data.baseK.toFixed(2)} 强行压制到 ${data.minK.toFixed(2)}。【改善至: ${minLabel}】`;
-                    diagBox.className = "w-full text-center py-4 px-6 rounded-2xl font-bold text-lg shadow-sm transition-all duration-300 liquid-glass bg-gray-100/60 border-gray-300 text-gray-900";
+                    diagBox.innerText = `战损压制：每天打 ${game_hours.toFixed(1)}h 游戏，能将杀伤力从 ${data.baseK.toFixed(2)} 强行压制到 ${data.minK.toFixed(2)}。【改善至: ${minLabel}】`;
+                    diagBox.className = "w-full py-4 px-6 rounded-2xl font-semibold text-base shadow-sm transition-all duration-300 liquid-glass border-l-4 border-gray-400/70 text-gray-300 diag-enter diag-bar";
                 }
             } else {
-                diagBox.innerText = `⚠️ 饮鸩止渴：越玩越崩！游戏产出比极低，请立即退出游戏！`;
-                diagBox.className = "w-full text-center py-4 px-6 rounded-2xl font-bold text-lg shadow-sm transition-all duration-300 liquid-glass bg-orange-100/50 border-orange-300 text-orange-900";
+                diagBox.innerText = `饮鸩止渴：越玩越崩！游戏产出比极低，请立即退出游戏！`;
+                diagBox.className = "w-full py-4 px-6 rounded-2xl font-semibold text-base shadow-sm transition-all duration-300 liquid-glass border-l-4 border-amber-500/70 text-amber-300 diag-enter diag-bar";
             }
 
             chartFantasy.data.labels = data.R_vals.map(r => r * 16);
@@ -500,14 +638,19 @@
         };
 
         function initCharts() {
+            const chartScalesConfig = {
+                x: { display: true, ticks: { color: '#9ca3af', callback: function(value) { return this.getLabelForValue(value).toFixed(1) + 'h'; } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { min: 0, max: 1.0, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            };
+
             const ctxF = document.getElementById('chart-fantasy').getContext('2d');
             chartFantasy = new Chart(ctxF, {
                 type: 'line',
-                data: { labels: [], datasets: [{ data: [], borderColor: '#2ec4b6', borderWidth: 3, pointRadius: 0, hoverRadius: 6, fill: false, tension: 0.1 }] },
+                data: { labels: [], datasets: [{ data: [], borderColor: '#38bdf8', borderWidth: 2.5, pointRadius: 0, hoverRadius: 5, fill: false, tension: 0.1 }] },
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
                     plugins: { legend: { display: false }, tooltip: commonTooltipConfig }, 
-                    scales: { x: { display: true, ticks: { callback: function(value) { return this.getLabelForValue(value).toFixed(1) + 'h'; } } }, y: { min: 0, max: 1.0 } },
+                    scales: chartScalesConfig,
                     interaction: { mode: 'index', intersect: false }
                 }
             });
@@ -515,11 +658,11 @@
             const ctxK = document.getElementById('chart-kill').getContext('2d');
             chartKill = new Chart(ctxK, {
                 type: 'line',
-                data: { labels: [], datasets: [{ data: [], borderColor: '#e63946', borderWidth: 3, pointRadius: 0, hoverRadius: 6, fill: false, tension: 0.1 }] },
+                data: { labels: [], datasets: [{ data: [], borderColor: '#fb7185', borderWidth: 2.5, pointRadius: 0, hoverRadius: 5, fill: false, tension: 0.1 }] },
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
                     plugins: { legend: { display: false }, tooltip: commonTooltipConfig }, 
-                    scales: { x: { display: true, ticks: { callback: function(value) { return this.getLabelForValue(value).toFixed(1) + 'h'; } } }, y: { min: 0, max: 1.5 } },
+                    scales: { ...chartScalesConfig, y: { min: 0, max: 1.5, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.05)' } } },
                     interaction: { mode: 'index', intersect: false }
                 }
             });
@@ -657,6 +800,13 @@
                 console.log(`[Haptic] → ${hapticProfile.label} | noBrake:${hapticProfile.noBrake} tickMs:${hapticProfile.tickMs}`);
                 showBadge(info);
             })();
+        }
+
+            // ---- 鼠标追踪点光源 (Windows Fluent Reveal Highlight) ----
+            document.addEventListener('mousemove', (e) => {
+                document.documentElement.style.setProperty('--mx', e.clientX + 'px');
+                document.documentElement.style.setProperty('--my', e.clientY + 'px');
+            });
         }
 
         window.onload = initCharts;
