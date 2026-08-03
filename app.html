@@ -563,7 +563,7 @@
                 
                 const isGameSlider = input.id.includes('alpha') || input.id.includes('beta') || input.id.includes('gamma');
                 const fillColor = isGameSlider ? '#f87171' : '#60a5fa';
-                const emptyColor = '#dfe2e8';
+                const emptyColor = '#1e1e24';
                 
                 input.style.background = `linear-gradient(to right, ${fillColor} ${percentage}%, ${emptyColor} ${percentage}%)`;
             });
@@ -799,6 +799,8 @@
                 console.log(`[Haptic] 型号: ${info.model} | 方式: ${info.src} | 等级: ${info.tier}`);
                 console.log(`[Haptic] → ${hapticProfile.label} | noBrake:${hapticProfile.noBrake} tickMs:${hapticProfile.tickMs}`);
                 showBadge(info);
+            })();
+
             // ---- 鼠标追踪点光源 (Windows Fluent Reveal Highlight) ----
             document.addEventListener('mousemove', (e) => {
                 document.documentElement.style.setProperty('--mx', e.clientX + 'px');
